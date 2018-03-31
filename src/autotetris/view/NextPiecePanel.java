@@ -27,7 +27,7 @@ public class NextPiecePanel extends JPanel {
 					squareSize = (totalSize - tp.getOrientations()[0].length + 1) / tp.getOrientations()[0].length;
 			g.setColor(Application.BACKGROUND_COLOR);
 			g.fillRect(0, 0, size.width, size.height);
-			g.setColor(tp.base);
+			g.setColor(tp.color);
 			for (int y = 0; y < tp.getOrientations()[0].length; y++) {
 				for (int x = 0; x < tp.getOrientations()[0][0].length; x++) {
 					if (tp.getOrientations()[0][y][x])

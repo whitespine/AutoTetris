@@ -30,12 +30,16 @@ public class Tetromino {
 		return y;
 	}
 	
-	public void move(int dx, double dy) {
+	public int getOrientation() {
+		return orientation;
+	}
+	
+	void move(int dx, double dy) {
 		this.x += dx;
 		this.y += dy;
 	}
 	
-	public void rotate(int direction) {
+	void rotate(int direction) {
 		orientation = (orientation + direction) % prototype.orientations.length;
 		while (orientation < 0) orientation += prototype.orientations.length;
 	}

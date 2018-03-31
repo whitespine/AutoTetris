@@ -5,6 +5,7 @@ import java.awt.*;
 import javax.swing.*;
 import javax.swing.border.*;
 
+import autotetris.controller.HumanInputPieceController;
 import autotetris.model.Model;
 
 public class Application extends JFrame {
@@ -29,6 +30,8 @@ public class Application extends JFrame {
 		
 		model = m;
 		
+		this.addKeyListener(new HumanInputPieceController(model, this));
+		
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
@@ -40,7 +43,6 @@ public class Application extends JFrame {
 		contentPane.setLayout(gbl_contentPane);
 		
 		gamePanel = new GamePanel(this);
-		gamePanel.setBorder(new MatteBorder(1, 1, 1, 1, (Color) new Color(0, 0, 0)));
 		GridBagConstraints gbc_gamePanel = new GridBagConstraints();
 		gbc_gamePanel.weightx = 0.8;
 		gbc_gamePanel.fill = GridBagConstraints.BOTH;
@@ -85,7 +87,6 @@ public class Application extends JFrame {
 		infoPanel.add(lblNext_Text, gbc_lblNext_Text);
 		
 		nextPiecePanel = new NextPiecePanel(this);
-		nextPiecePanel.setBorder(null);
 		GridBagConstraints gbc_nextPiecePanel = new GridBagConstraints();
 		gbc_nextPiecePanel.weighty = 0.7;
 		gbc_nextPiecePanel.insets = new Insets(5, 5, 5, 5);
@@ -125,6 +126,12 @@ public class Application extends JFrame {
 		gbc_verticalStrut.gridx = 0;
 		gbc_verticalStrut.gridy = 7;
 		infoPanel.add(verticalStrut, gbc_verticalStrut);
+		
+		this.setFocusable(true);
+	}
+
+	public void showScore(int score) {
+		lblScore.setText("" + score);
 	}
 
 }
