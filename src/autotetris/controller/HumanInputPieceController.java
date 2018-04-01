@@ -28,23 +28,17 @@ public class HumanInputPieceController implements KeyListener {
 		} else if (keyCode == KeyEvent.VK_RIGHT || keyCode == KeyEvent.VK_KP_RIGHT || keyCode == KeyEvent.VK_D) {
 			model.moveFallingPiece(1, 0, 0);
 		} else if (keyCode == KeyEvent.VK_SPACE) {
-			model.setSpeedyMode(true);
+			model.applyCurrentRolloutBoard();
 		}
 		app.repaint();
 	}
 
 	@Override
 	public void keyReleased(KeyEvent evt) {
-		int keyCode = evt.getExtendedKeyCode();
-		if (keyCode == KeyEvent.VK_SPACE) {
-			model.setSpeedyMode(false);
-		}
 	}
 
 	@Override
 	public void keyTyped(KeyEvent arg0) {
-		// TODO Auto-generated method stub
-		
 	}
 
 }

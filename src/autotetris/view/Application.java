@@ -1,17 +1,20 @@
 package autotetris.view;
 
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.*;
 import javax.swing.border.*;
 
+import autotetris.controller.ExecutionController;
 import autotetris.controller.HumanInputPieceController;
 import autotetris.model.Model;
 
 public class Application extends JFrame {
 
 	private static final long serialVersionUID = 1341549472797373358L;
-	public static final Color BACKGROUND_COLOR = new Color(8, 8, 8);
+	public static final Color BACKGROUND_COLOR = Color.BLACK;
 	private JPanel contentPane;
 	
 	private GamePanel gamePanel;
@@ -19,6 +22,7 @@ public class Application extends JFrame {
 	private JLabel lblScore;
 	private NextPiecePanel nextPiecePanel;
 	Model model;
+	private JCheckBox chckbxRunAi;
 	
 	/**
 	 * Create the frame.
@@ -60,9 +64,9 @@ public class Application extends JFrame {
 		contentPane.add(infoPanel, gbc_infoPanel);
 		GridBagLayout gbl_infoPanel = new GridBagLayout();
 		gbl_infoPanel.columnWidths = new int[]{0, 0};
-		gbl_infoPanel.rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0};
+		gbl_infoPanel.rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 		gbl_infoPanel.columnWeights = new double[]{1.0, Double.MIN_VALUE};
-		gbl_infoPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, Double.MIN_VALUE};
+		gbl_infoPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, Double.MIN_VALUE};
 		infoPanel.setLayout(gbl_infoPanel);
 		
 		JLabel lblScoreText = new JLabel("Score");
@@ -89,7 +93,7 @@ public class Application extends JFrame {
 		nextPiecePanel = new NextPiecePanel(this);
 		GridBagConstraints gbc_nextPiecePanel = new GridBagConstraints();
 		gbc_nextPiecePanel.weighty = 0.7;
-		gbc_nextPiecePanel.insets = new Insets(5, 5, 5, 5);
+		gbc_nextPiecePanel.insets = new Insets(5, 5, 5, 0);
 		gbc_nextPiecePanel.fill = GridBagConstraints.BOTH;
 		gbc_nextPiecePanel.gridx = 0;
 		gbc_nextPiecePanel.gridy = 3;
@@ -119,19 +123,52 @@ public class Application extends JFrame {
 		gbc_btnReset.gridy = 6;
 		infoPanel.add(btnReset, gbc_btnReset);
 		
+		chckbxRunAi = new JCheckBox("Run AI");
+		GridBagConstraints gbc_chckbxRunAi = new GridBagConstraints();
+		gbc_chckbxRunAi.insets = new Insets(0, 0, 5, 0);
+		gbc_chckbxRunAi.gridx = 0;
+		gbc_chckbxRunAi.gridy = 7;
+		infoPanel.add(chckbxRunAi, gbc_chckbxRunAi);
+		
 		Component verticalStrut = Box.createVerticalStrut(20);
 		verticalStrut.setEnabled(false);
 		GridBagConstraints gbc_verticalStrut = new GridBagConstraints();
 		gbc_verticalStrut.weighty = 0.7;
 		gbc_verticalStrut.gridx = 0;
-		gbc_verticalStrut.gridy = 7;
+		gbc_verticalStrut.gridy = 9;
 		infoPanel.add(verticalStrut, gbc_verticalStrut);
 		
 		this.setFocusable(true);
+		btnPlay.setFocusable(false);
+		btnPause.setFocusable(false);
+		btnReset.setFocusable(false);
+		chckbxRunAi.setFocusable(false);
+	}
+	
+	public boolean shouldAIRun() {
+		return chckbxRunAi.isSelected();
 	}
 
 	public void showScore(int score) {
 		lblScore.setText("" + score);
+	}
+
+	public void setExecutionController(ExecutionController ec) {
+		btnPlay.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				ec.play();
+			}
+		});
+		btnPause.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				ec.pause();
+			}
+		});
+		btnReset.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				ec.reset();
+			}
+		});
 	}
 
 }

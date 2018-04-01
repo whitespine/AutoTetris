@@ -7,14 +7,14 @@ public class Model {
 	public static final int BOARD_WIDTH = 20, BOARD_HEIGHT = 22, MAX_DEBOUNCE_TICKS = 8;
 	public static final double DROP_PER_TICK = 0.01;
 	
-	boolean board[][];
+	BoardItem board[][];
 	int piecesDropped, rowScore, debounce = 0;
 	ArrayList<TetrominoPrototype> allPieces;
 	Tetromino fallingPiece;
-	boolean speedy = false, gameOver = false;
+	boolean gameOver = false;
 
 	public Model() {
-		board = new boolean[BOARD_WIDTH][BOARD_HEIGHT];
+		board = new BoardItem[BOARD_WIDTH][BOARD_HEIGHT];
 		allPieces = new ArrayList<TetrominoPrototype>();
 		
 		try {
@@ -26,7 +26,7 @@ public class Model {
 		setupGameState();
 	}
 
-	public boolean[][] getBoard() {
+	public BoardItem[][] getBoard() {
 		return board;
 	}
 	
@@ -36,10 +36,6 @@ public class Model {
 	
 	public TetrominoPrototype getNextPiece() {
 		return allPieces.get(piecesDropped % allPieces.size());
-	}
-
-	public void setSpeedyMode(boolean mode) {
-		this.speedy = mode;
 	}
 	
 	public int getScore() {
@@ -57,7 +53,7 @@ public class Model {
 		rowScore = 0;
 		for (int i = 0; i < BOARD_WIDTH; i++)
 			for (int j = 0; j < BOARD_HEIGHT; j++)
-				board[i][j] = false;
+				board[i][j] = BoardItem.Open;
 		Collections.shuffle(allPieces);
 	}
 	
@@ -67,7 +63,7 @@ public class Model {
 		for (int y = BOARD_HEIGHT - 1; y >= 0; y--) {
 			boolean andRow = true;
 			for (int x = 0; x < BOARD_WIDTH; x++)
-				andRow &= board[x][y];
+				andRow &= (board[x][y] == BoardItem.Filled);
 			if (andRow)
 				rowsToEliminate++;
 			else
@@ -81,7 +77,7 @@ public class Model {
 				for (int y = BOARD_HEIGHT - 1; y >= rowsToEliminate; y--)
 					board[x][y] = board[x][y - rowsToEliminate];
 				for (int y = 0; y < rowsToEliminate; y++)
-					board[x][y] = false;
+					board[x][y] = BoardItem.Open;
 			}
 		}
 		rowScore += rowsToEliminate * (rowsToEliminate + 1) / 2;
@@ -104,7 +100,7 @@ public class Model {
 								gameOver = true;
 								return -1;
 							}
-							board[pieceX + x][pieceY - y - 1] = true;
+							board[pieceX + x][pieceY - y - 1] = BoardItem.Filled;
 						}
 					}
 				}
@@ -112,7 +108,45 @@ public class Model {
 			} else fallingPiece.move(0, DROP_PER_TICK);
 				
 		}
-		return (int)((speedy ? 100 : 400) * DROP_PER_TICK);
+		return (int)(400 * DROP_PER_TICK);
+	}
+	
+	public BoardItem[][] generateRolloutBoard(BoardItem[][] cBoard, Tetromino piece) {
+		if (cBoard == null) {
+			cBoard = new BoardItem[BOARD_WIDTH][BOARD_HEIGHT];
+			for (int i = 0; i < BOARD_WIDTH; i++)
+				for (int j = 0; j < BOARD_HEIGHT; j++)
+					cBoard[i][j] = board[i][j];
+		}
+		if (piece == null)
+			return cBoard;
+		int pieceX = fallingPiece.x, pieceY = (int)Math.ceil(fallingPiece.y),
+				pieceSize = fallingPiece.prototype.orientations[0].length;
+		boolean[][] currentOrientation = fallingPiece.prototype.orientations[fallingPiece.orientation];
+		
+		// drop piece until collision
+		int dy = 0;
+		while (!moveConflict(0, dy, 0)) dy++;
+		pieceY += dy;
+		
+		for (int x = 0; x < pieceSize; x++) {
+			for (int y = 0; y < pieceSize; y++) {
+				if (currentOrientation[y][x]) {
+					if (pieceY - y - 1 >= 0 && pieceY - y - 1 < BOARD_HEIGHT)
+						cBoard[pieceX + x][pieceY - y - 1] = BoardItem.Potential;
+				}
+			}
+		}
+		return cBoard;
+	}
+	
+	public void applyCurrentRolloutBoard() {
+		BoardItem[][] roBoard = this.generateRolloutBoard(board, fallingPiece);
+		for (int i = 0; i < roBoard.length; i++)
+			for (int j = 0; j < roBoard[i].length; j++)
+				if (roBoard[i][j] == BoardItem.Potential)
+					roBoard[i][j] = BoardItem.Filled;
+		fallingPiece = null;
 	}
 	
 	public boolean moveFallingPiece(int dx, double dy, int direction) {
@@ -128,7 +162,7 @@ public class Model {
 	private boolean moveConflict(int dx, double dy, int direction) {
 		if (fallingPiece == null) return false;
 		
-		boolean[][] tempBoard = new boolean[BOARD_WIDTH][BOARD_HEIGHT];
+		BoardItem[][] tempBoard = new BoardItem[BOARD_WIDTH][BOARD_HEIGHT];
 		
 		int newOrientation = (fallingPiece.orientation + direction) % fallingPiece.prototype.orientations.length;
 		while (newOrientation < 0) newOrientation += fallingPiece.prototype.orientations.length;
@@ -150,7 +184,7 @@ public class Model {
 					// Check for collision with other pieces on the board
 					if ((pieceX + x) >= 0 && (pieceX + x) < BOARD_WIDTH && 
 							(pieceY - y) >= 0 && (pieceY - y) < BOARD_HEIGHT && 
-							board[pieceX + x][pieceY - y])
+							board[pieceX + x][pieceY - y] == BoardItem.Filled)
 						return true;
 				}
 			}

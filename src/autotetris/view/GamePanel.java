@@ -8,6 +8,7 @@ import java.awt.geom.Rectangle2D;
 
 import javax.swing.JPanel;
 
+import autotetris.model.BoardItem;
 import autotetris.model.Model;
 import autotetris.model.Tetromino;
 
@@ -15,6 +16,7 @@ import autotetris.model.Tetromino;
 public class GamePanel extends JPanel {
 	private static final long serialVersionUID = 1L;
 	public static final Color DROPPED_SQUARE_COLOR = Color.LIGHT_GRAY;
+	public static final Color POTENTIAL_SQUARE_COLOR = Color.DARK_GRAY;
 	private Application app;
 
 	public GamePanel(Application app) {
@@ -26,6 +28,7 @@ public class GamePanel extends JPanel {
 		int xUnitSize = size.width / Model.BOARD_WIDTH, yUnitSize = size.height / Model.BOARD_HEIGHT,
 				xoff = size.width - Model.BOARD_WIDTH * xUnitSize,
 				yoff = size.height - Model.BOARD_HEIGHT * yUnitSize;
+		BoardItem[][] board = app.model.generateRolloutBoard(null, app.model.getFallingPiece());
 		
 		g.setColor(Application.BACKGROUND_COLOR);
 		g.fillRect(xoff / 2, 0, Model.BOARD_WIDTH * xUnitSize, size.height);
@@ -33,7 +36,15 @@ public class GamePanel extends JPanel {
 		g.setColor(DROPPED_SQUARE_COLOR);
 		for (int x = 0; x < Model.BOARD_WIDTH; x++) {
 			for (int y = 0; y < Model.BOARD_HEIGHT; y++) {
-				if (app.model.getBoard()[x][y])
+				if (board[x][y] == BoardItem.Filled)
+					g.fillRect(x * xUnitSize + xoff / 2, y * yUnitSize + yoff, xUnitSize - 1, yUnitSize - 1);
+			}
+		}
+		
+		g.setColor(POTENTIAL_SQUARE_COLOR);
+		for (int x = 0; x < Model.BOARD_WIDTH; x++) {
+			for (int y = 0; y < Model.BOARD_HEIGHT; y++) {
+				if (board[x][y] == BoardItem.Potential)
 					g.fillRect(x * xUnitSize + xoff / 2, y * yUnitSize + yoff, xUnitSize - 1, yUnitSize - 1);
 			}
 		}
