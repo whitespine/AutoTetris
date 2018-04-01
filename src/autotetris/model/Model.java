@@ -4,7 +4,7 @@ import java.awt.Color;
 import java.util.*;
 
 public class Model {
-	public static final int BOARD_WIDTH = 10, BOARD_HEIGHT = 6, MAX_DEBOUNCE_TICKS = 8;
+	public static final int BOARD_WIDTH = 20, BOARD_HEIGHT = 22, MAX_DEBOUNCE_TICKS = 8;
 	public static final double DROP_PER_TICK = 0.01;
 	
 	boolean board[][];
