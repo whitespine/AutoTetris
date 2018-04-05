@@ -34,17 +34,17 @@ public class GamePanel extends JPanel {
 		g.fillRect(xoff / 2, 0, Model.BOARD_WIDTH * xUnitSize, size.height);
 		
 		g.setColor(DROPPED_SQUARE_COLOR);
-		for (int x = 0; x < Model.BOARD_WIDTH; x++) {
-			for (int y = 0; y < Model.BOARD_HEIGHT; y++) {
-				if (board[x][y] == BoardItem.Filled)
+		for (int y = 0; y < Model.BOARD_HEIGHT; y++) {
+			for (int x = 0; x < Model.BOARD_WIDTH; x++) {
+				if (board[y][x] == BoardItem.Filled)
 					g.fillRect(x * xUnitSize + xoff / 2, y * yUnitSize + yoff, xUnitSize - 1, yUnitSize - 1);
 			}
 		}
 		
 		g.setColor(POTENTIAL_SQUARE_COLOR);
-		for (int x = 0; x < Model.BOARD_WIDTH; x++) {
-			for (int y = 0; y < Model.BOARD_HEIGHT; y++) {
-				if (board[x][y] == BoardItem.Potential)
+		for (int y = 0; y < Model.BOARD_HEIGHT; y++) {
+			for (int x = 0; x < Model.BOARD_WIDTH; x++) {
+				if (board[y][x] == BoardItem.Potential)
 					g.fillRect(x * xUnitSize + xoff / 2, y * yUnitSize + yoff, xUnitSize - 1, yUnitSize - 1);
 			}
 		}

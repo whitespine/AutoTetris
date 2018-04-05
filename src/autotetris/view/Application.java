@@ -7,6 +7,7 @@ import java.awt.event.ActionListener;
 import javax.swing.*;
 import javax.swing.border.*;
 
+import autotetris.controller.AIConfiguratorController;
 import autotetris.controller.ExecutionController;
 import autotetris.controller.HumanInputPieceController;
 import autotetris.model.Model;
@@ -18,11 +19,17 @@ public class Application extends JFrame {
 	private JPanel contentPane;
 	
 	private GamePanel gamePanel;
-	private JButton btnPlay, btnPause, btnReset;
 	private JLabel lblScore;
 	private NextPiecePanel nextPiecePanel;
 	Model model;
-	private JCheckBox chckbxRunAi;
+	private JMenuBar menuBar;
+	private JMenuItem mntmPlay;
+	private JMenuItem mntmPause;
+	private JMenuItem mntmReset;
+	private JMenu mnAiOptions;
+	private JMenuItem mntmTrain;
+	private JMenuItem mntmPreferences;
+	private AIConfigurator aic;
 	
 	/**
 	 * Create the frame.
@@ -30,11 +37,62 @@ public class Application extends JFrame {
 	public Application(Model m) {
 		super("Tetris");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 455, 409);
+		setBounds(100, 100, 482, 449);
 		
 		model = m;
-		
+		Application self = this;
 		this.addKeyListener(new HumanInputPieceController(model, this));
+		
+		menuBar = new JMenuBar();
+		setJMenuBar(menuBar);
+		
+		JMenu mnGame = new JMenu("Game");
+		menuBar.add(mnGame);
+		
+		mntmPlay = new JMenuItem("Play");
+		mnGame.add(mntmPlay);
+		
+		mntmPause = new JMenuItem("Pause");
+		mnGame.add(mntmPause);
+		
+		mntmReset = new JMenuItem("Reset");
+		mnGame.add(mntmReset);
+		
+		JSeparator separator = new JSeparator();
+		mnGame.add(separator);
+		
+		JMenuItem mntmQuit = new JMenuItem("Quit");
+		mntmQuit.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				System.exit(0);
+			}
+		});
+		mnGame.add(mntmQuit);
+		
+		mnAiOptions = new JMenu("AI Options");
+		menuBar.add(mnAiOptions);
+		
+		mntmTrain = new JMenuItem("Train");
+		mntmTrain.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				self.disableControls();
+				new ExecutionController(model, self).reset();
+				model.train(self);
+			}
+		});
+		mnAiOptions.add(mntmTrain);
+		
+		JSeparator separator_1 = new JSeparator();
+		mnAiOptions.add(separator_1);
+		
+		mntmPreferences = new JMenuItem("Preferences...");
+		mntmPreferences.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				new AIConfiguratorController(model, self).fillConfigurator();
+				aic.setVisible(true);
+			}
+		});
+		mnAiOptions.add(mntmPreferences);
 		
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -50,7 +108,6 @@ public class Application extends JFrame {
 		GridBagConstraints gbc_gamePanel = new GridBagConstraints();
 		gbc_gamePanel.weightx = 0.8;
 		gbc_gamePanel.fill = GridBagConstraints.BOTH;
-		gbc_gamePanel.insets = new Insets(0, 0, 0, 5);
 		gbc_gamePanel.gridx = 0;
 		gbc_gamePanel.gridy = 0;
 		contentPane.add(gamePanel, gbc_gamePanel);
@@ -64,9 +121,9 @@ public class Application extends JFrame {
 		contentPane.add(infoPanel, gbc_infoPanel);
 		GridBagLayout gbl_infoPanel = new GridBagLayout();
 		gbl_infoPanel.columnWidths = new int[]{0, 0};
-		gbl_infoPanel.rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+		gbl_infoPanel.rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 		gbl_infoPanel.columnWeights = new double[]{1.0, Double.MIN_VALUE};
-		gbl_infoPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, Double.MIN_VALUE};
+		gbl_infoPanel.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, Double.MIN_VALUE};
 		infoPanel.setLayout(gbl_infoPanel);
 		
 		JLabel lblScoreText = new JLabel("Score");
@@ -99,54 +156,18 @@ public class Application extends JFrame {
 		gbc_nextPiecePanel.gridy = 3;
 		infoPanel.add(nextPiecePanel, gbc_nextPiecePanel);
 		
-		btnPlay = new JButton("Play");
-		GridBagConstraints gbc_btnPlay = new GridBagConstraints();
-		gbc_btnPlay.fill = GridBagConstraints.HORIZONTAL;
-		gbc_btnPlay.insets = new Insets(0, 0, 5, 0);
-		gbc_btnPlay.gridx = 0;
-		gbc_btnPlay.gridy = 4;
-		infoPanel.add(btnPlay, gbc_btnPlay);
-		
-		btnPause = new JButton("Pause");
-		GridBagConstraints gbc_btnPause = new GridBagConstraints();
-		gbc_btnPause.fill = GridBagConstraints.HORIZONTAL;
-		gbc_btnPause.insets = new Insets(0, 0, 5, 0);
-		gbc_btnPause.gridx = 0;
-		gbc_btnPause.gridy = 5;
-		infoPanel.add(btnPause, gbc_btnPause);
-		
-		btnReset = new JButton("Reset");
-		GridBagConstraints gbc_btnReset = new GridBagConstraints();
-		gbc_btnReset.fill = GridBagConstraints.HORIZONTAL;
-		gbc_btnReset.insets = new Insets(0, 0, 5, 0);
-		gbc_btnReset.gridx = 0;
-		gbc_btnReset.gridy = 6;
-		infoPanel.add(btnReset, gbc_btnReset);
-		
-		chckbxRunAi = new JCheckBox("Run AI");
-		GridBagConstraints gbc_chckbxRunAi = new GridBagConstraints();
-		gbc_chckbxRunAi.insets = new Insets(0, 0, 5, 0);
-		gbc_chckbxRunAi.gridx = 0;
-		gbc_chckbxRunAi.gridy = 7;
-		infoPanel.add(chckbxRunAi, gbc_chckbxRunAi);
-		
 		Component verticalStrut = Box.createVerticalStrut(20);
 		verticalStrut.setEnabled(false);
 		GridBagConstraints gbc_verticalStrut = new GridBagConstraints();
 		gbc_verticalStrut.weighty = 0.7;
 		gbc_verticalStrut.gridx = 0;
-		gbc_verticalStrut.gridy = 9;
+		gbc_verticalStrut.gridy = 10;
 		infoPanel.add(verticalStrut, gbc_verticalStrut);
 		
 		this.setFocusable(true);
-		btnPlay.setFocusable(false);
-		btnPause.setFocusable(false);
-		btnReset.setFocusable(false);
-		chckbxRunAi.setFocusable(false);
-	}
-	
-	public boolean shouldAIRun() {
-		return chckbxRunAi.isSelected();
+		
+		aic = new AIConfigurator(this);
+		aic.setVisible(false);
 	}
 
 	public void showScore(int score) {
@@ -154,21 +175,39 @@ public class Application extends JFrame {
 	}
 
 	public void setExecutionController(ExecutionController ec) {
-		btnPlay.addActionListener(new ActionListener() {
+		mntmPlay.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				ec.play();
 			}
 		});
-		btnPause.addActionListener(new ActionListener() {
+		mntmPause.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				ec.pause();
 			}
 		});
-		btnReset.addActionListener(new ActionListener() {
+		mntmReset.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				ec.reset();
 			}
 		});
+	}
+
+	public AIConfigurator getAIConfigurator() {
+		return aic;
+	}
+	
+	public void disableControls() {
+		mntmPlay.setEnabled(false);
+		mntmPause.setEnabled(false);
+		mntmReset.setEnabled(false);
+		mntmPreferences.setEnabled(false);
+	}
+	
+	public void enableControls() {
+		mntmPlay.setEnabled(true);
+		mntmPause.setEnabled(true);
+		mntmReset.setEnabled(true);
+		mntmPreferences.setEnabled(true);
 	}
 
 }

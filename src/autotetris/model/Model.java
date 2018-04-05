@@ -2,20 +2,29 @@ package autotetris.model;
 
 import java.awt.Color;
 import java.util.*;
+import java.util.stream.Collectors;
+
+import javax.swing.JOptionPane;
+
+import autotetris.view.Application;
 
 public class Model {
 	public static final int BOARD_WIDTH = 20, BOARD_HEIGHT = 22, MAX_DEBOUNCE_TICKS = 8;
-	public static final double DROP_PER_TICK = 0.01;
+	double DROP_PER_TICK = 0.01;
 	
 	BoardItem board[][];
 	int piecesDropped, rowScore, debounce = 0;
 	ArrayList<TetrominoPrototype> allPieces;
 	Tetromino fallingPiece;
 	boolean gameOver = false;
+	TetrisSolver ai;
+	public static TetrisTrainer trainer = new TetrisTrainer();
 
 	public Model() {
-		board = new BoardItem[BOARD_WIDTH][BOARD_HEIGHT];
+		board = new BoardItem[BOARD_HEIGHT][BOARD_WIDTH];
 		allPieces = new ArrayList<TetrominoPrototype>();
+		trainer.iterations = 500;
+		ai = new TetrisSolver();
 		
 		try {
 			initializePieces();
@@ -39,50 +48,53 @@ public class Model {
 	}
 	
 	public int getScore() {
-		return rowScore * BOARD_WIDTH * 2 + ((piecesDropped - 1) / 2);
+		return rowScore * BOARD_WIDTH + ((piecesDropped - 1) / 2);
 	}
 	
 	public boolean isGameOver() {
 		return gameOver;
 	}
 	
+	public int getTrainingIterations() {
+		return trainer.iterations;
+	}
+
+	public static void setTrainingIterations(int trainingIterations) {
+		Model.trainer.iterations = trainingIterations;
+	}
+	
+	public TetrisSolver getSolver() {
+		return ai;
+	}
+
 	public void setupGameState() {
 		fallingPiece = null;
 		gameOver = false;
 		piecesDropped = 0;
 		rowScore = 0;
-		for (int i = 0; i < BOARD_WIDTH; i++)
-			for (int j = 0; j < BOARD_HEIGHT; j++)
+		for (int i = 0; i < BOARD_HEIGHT; i++)
+			for (int j = 0; j < BOARD_WIDTH; j++)
 				board[i][j] = BoardItem.Open;
-		Collections.shuffle(allPieces);
 	}
 	
 	public int tick() throws InterruptedException {
-		// Check for rows
-		int rowsToEliminate = 0;
-		for (int y = BOARD_HEIGHT - 1; y >= 0; y--) {
-			boolean andRow = true;
-			for (int x = 0; x < BOARD_WIDTH; x++)
-				andRow &= (board[x][y] == BoardItem.Filled);
-			if (andRow)
-				rowsToEliminate++;
-			else
-				break;
-		}
-		if (rowsToEliminate == BOARD_HEIGHT) {
-			for (int x = 0; x < BOARD_WIDTH; x++)
-				Arrays.fill(board[x], false);
-		} else if (rowsToEliminate > 0) {
-			for (int x = 0; x < BOARD_WIDTH; x++) {
-				for (int y = BOARD_HEIGHT - 1; y >= rowsToEliminate; y--)
-					board[x][y] = board[x][y - rowsToEliminate];
-				for (int y = 0; y < rowsToEliminate; y++)
-					board[x][y] = BoardItem.Open;
+		// Clear rows
+		List<Boolean> filledRows = Arrays.stream(board).map(row -> 
+				Arrays.stream(row).map(it -> it == BoardItem.Filled).reduce(true, (a, b) -> a && b).booleanValue()).collect(Collectors.toList());
+		if (filledRows.contains(true)) {
+			int rowMove = 0;
+			for (int y = BOARD_HEIGHT - 1; y >= 0; y--) {
+				if (filledRows.get(y))
+					rowMove++;
+				if (y >= rowMove)
+					board[y] = Arrays.copyOf(board[y - rowMove], board[y - rowMove].length);
 			}
+			for (int i = 0; i < rowMove; i++)
+				Arrays.fill(board[i], BoardItem.Open);
+			rowScore += rowMove * (rowMove + 1);
 		}
-		rowScore += rowsToEliminate * (rowsToEliminate + 1) / 2;
 		
-		// Drop a piece
+		// Drop piece
 		if (fallingPiece == null) {
 			fallingPiece = new Tetromino(getNextPiece(), BOARD_WIDTH / 2, 0);
 			if (piecesDropped++ % allPieces.size() == 0)
@@ -100,7 +112,7 @@ public class Model {
 								gameOver = true;
 								return -1;
 							}
-							board[pieceX + x][pieceY - y - 1] = BoardItem.Filled;
+							board[pieceY - y - 1][pieceX + x] = BoardItem.Filled;
 						}
 					}
 				}
@@ -113,9 +125,9 @@ public class Model {
 	
 	public BoardItem[][] generateRolloutBoard(BoardItem[][] cBoard, Tetromino piece) {
 		if (cBoard == null) {
-			cBoard = new BoardItem[BOARD_WIDTH][BOARD_HEIGHT];
-			for (int i = 0; i < BOARD_WIDTH; i++)
-				for (int j = 0; j < BOARD_HEIGHT; j++)
+			cBoard = new BoardItem[BOARD_HEIGHT][BOARD_WIDTH];
+			for (int i = 0; i < BOARD_HEIGHT; i++)
+				for (int j = 0; j < BOARD_WIDTH; j++)
 					cBoard[i][j] = board[i][j];
 		}
 		if (piece == null)
@@ -128,12 +140,12 @@ public class Model {
 		int dy = 0;
 		while (!moveConflict(0, dy, 0)) dy++;
 		pieceY += dy;
-		
-		for (int x = 0; x < pieceSize; x++) {
-			for (int y = 0; y < pieceSize; y++) {
+
+		for (int y = 0; y < pieceSize; y++) {
+			for (int x = 0; x < pieceSize; x++) {
 				if (currentOrientation[y][x]) {
 					if (pieceY - y - 1 >= 0 && pieceY - y - 1 < BOARD_HEIGHT)
-						cBoard[pieceX + x][pieceY - y - 1] = BoardItem.Potential;
+						cBoard[pieceY - y - 1][pieceX + x] = BoardItem.Potential;
 				}
 			}
 		}
@@ -158,17 +170,36 @@ public class Model {
 			return true;
 		}
 	}
+
+	public void train(Application app) {
+		Model self = this;
+		new Thread() {
+			public void run() {
+				TetrisSolver ts = Model.trainer.train();
+				if (ts != null)
+					self.ai = ts;
+				javax.swing.SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						JOptionPane.showMessageDialog(app, 
+								ts == null ? "Solver could not be trained." : "Solver was successfully trained.", "Training Status", 
+								ts == null ? JOptionPane.ERROR_MESSAGE : JOptionPane.INFORMATION_MESSAGE);
+						app.enableControls();
+					}
+				});
+			}
+		}.start();
+	}
 	
 	private boolean moveConflict(int dx, double dy, int direction) {
 		if (fallingPiece == null) return false;
 		
-		BoardItem[][] tempBoard = new BoardItem[BOARD_WIDTH][BOARD_HEIGHT];
+		BoardItem[][] tempBoard = new BoardItem[BOARD_HEIGHT][BOARD_WIDTH];
 		
 		int newOrientation = (fallingPiece.orientation + direction) % fallingPiece.prototype.orientations.length;
 		while (newOrientation < 0) newOrientation += fallingPiece.prototype.orientations.length;
 		
-		for (int i = 0; i < BOARD_WIDTH; i++)
-			for (int j = 0; j < BOARD_HEIGHT; j++)
+		for (int i = 0; i < BOARD_HEIGHT; i++)
+			for (int j = 0; j < BOARD_WIDTH; j++)
 				tempBoard[i][j] = board[i][j];
 		
 		int pieceX = fallingPiece.x + dx, pieceY = (int)Math.ceil(fallingPiece.y + dy),
@@ -184,7 +215,7 @@ public class Model {
 					// Check for collision with other pieces on the board
 					if ((pieceX + x) >= 0 && (pieceX + x) < BOARD_WIDTH && 
 							(pieceY - y) >= 0 && (pieceY - y) < BOARD_HEIGHT && 
-							board[pieceX + x][pieceY - y] == BoardItem.Filled)
+							board[pieceY - y][pieceX + x] == BoardItem.Filled)
 						return true;
 				}
 			}

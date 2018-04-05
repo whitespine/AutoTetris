@@ -26,7 +26,8 @@ public class NextPiecePanel extends JPanel {
 					totalSize = Math.min(size.width - 2 * PADDING, size.height - 2 * PADDING),
 					squareSize = (totalSize - tp.getOrientations()[0].length + 1) / tp.getOrientations()[0].length;
 			g.setColor(Application.BACKGROUND_COLOR);
-			g.fillRect(0, 0, size.width, size.height);
+			g.fillRect(xoff, yoff, (squareSize + 1) * tp.getOrientations()[0].length + 2 * PADDING - 1,
+									(squareSize + 1) * tp.getOrientations()[0].length + 2 * PADDING - 1);
 			g.setColor(tp.color);
 			for (int y = 0; y < tp.getOrientations()[0].length; y++) {
 				for (int x = 0; x < tp.getOrientations()[0][0].length; x++) {
