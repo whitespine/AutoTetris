@@ -84,18 +84,16 @@ public class Application extends JFrame {
             // TODO: Maybe actually do something here
         });
 		mnAiOptions.add(mntmTrain);
-		
-		JSeparator separator_1 = new JSeparator();
-		mnAiOptions.add(separator_1);
+
+		mnAiOptions.add(new JSeparator());
 
 		mntmAIPlay = new JMenuItem("Play Self");
 		mntmAIPlay.addActionListener(e -> {
-            // TODO: implement
+            solver.execute(this, model);
         });
-		mntmAIPlay.add(mntmTrain);
+		mnAiOptions.add(mntmAIPlay);
 
-		separator_1 = new JSeparator();
-		mntmAIPlay.add(separator_1);
+		mntmAIPlay.add(new JSeparator());
 		
 		mntmPreferences = new JMenuItem("Preferences...");
 		mntmPreferences.addActionListener(arg0 -> {

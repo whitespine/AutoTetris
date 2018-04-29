@@ -46,7 +46,6 @@ public class Explorer {
             // Get our state, and explore it
             PotentialState next = frontier.pop();
             next.queueExploreAction();
-            System.out.println(frontier.size());
         }
 
         // Check for terminal locations, and build back from them

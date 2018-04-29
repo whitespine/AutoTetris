@@ -65,11 +65,14 @@ public class TetrisSolver {
                     targetModel.doAction(a);
                     targetApp.repaint();
                     try {
-                        sleep(50);
+                        sleep(10);
                     } catch (InterruptedException e) {
                         System.out.println("Interrupted in tetrissolver for some reason");
                     }
                 }
+                // finalize with a down
+                targetModel.doAction(Action.Down);
+                targetApp.repaint();
 
 
             }
