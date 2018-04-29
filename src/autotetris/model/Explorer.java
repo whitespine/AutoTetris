@@ -8,6 +8,15 @@ import java.util.stream.Collectors;
 // Handles exploration.
 // Note: Gets pretty messy with what calls what. Be careful!
 public class Explorer {
+    // Order in which to consider actions
+    private static final Action[] ACTION_PRIORITY = {
+            Action.Spin,
+            Action.Left,
+            Action.Right,
+            Action.Down
+    };
+
+    // The model to analyze
     private Model model;
 
     // Exploration state
@@ -37,6 +46,7 @@ public class Explorer {
             // Get our state, and explore it
             PotentialState next = frontier.pop();
             next.queueExploreAction();
+            System.out.println(frontier.size());
         }
 
         // Check for terminal locations, and build back from them
@@ -60,7 +70,7 @@ public class Explorer {
 
         void queueExploreAction() {
             int stepsToHere = stateMap.get(this).stepsToArrive;
-            for (Action action : Action.values()) {
+            for (Action action : ACTION_PRIORITY) {
                 if(action == Action.Drop) continue;
 
                 // Create the tetromino, and perform action on it
@@ -84,17 +94,19 @@ public class Explorer {
                 PotentialState newState = new PotentialState(t.getPosition(), t.getOrientation());
 
                 // Compute existing route to the given node
-                RouteNode existing = stateMap.get(newState);
+                RouteNode existingRoute = stateMap.get(newState);
 
                 // If we're a faster route to neighbor, override. Don't need to check if allFree if someone else already has.
                 // Also don't need to re-explore.
-                if (newState != null && existing.stepsToArrive > stepsToHere + 1) {
-                    stateMap.put(newState, new RouteNode(stepsToHere + 1, action, this));
+                if (existingRoute != null) {
+                    if (existingRoute.stepsToArrive > stepsToHere + 1)
+                        stateMap.put(newState, new RouteNode(stepsToHere + 1, action, this));
                 }
                 // Otherwise, check if it's even possible.
                 else if (model.allFree(t.project())) {
                     stateMap.put(newState, new RouteNode(stepsToHere + 1, action, this));
-                    frontier.push(newState);
+                    if(!frontier.contains(newState))
+                        frontier.push(newState);
                 }
             }
         }
@@ -128,6 +140,14 @@ public class Explorer {
             int result = pos.hashCode();
             result = 31 * result + orientation;
             return result;
+        }
+
+        @Override
+        public String toString() {
+            return "PotentialState{" +
+                    "pos=" + pos +
+                    ", orientation=" + orientation +
+                    '}';
         }
     }
 
