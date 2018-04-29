@@ -10,6 +10,7 @@ public class TetrisTrainer {
 	int iterations;
 	
 	public TetrisSolver train() {
+		/*
 		// Apparently since i need a vector of things, I should normalize it and rotate it around a sphere of fixed length.
 		List<Model> games = new ArrayList<Model>();
 		for (int i = 0; i < CANDIDATES; i++) {
@@ -38,6 +39,8 @@ public class TetrisTrainer {
 		}
 		
 		return new TetrisSolver();
+		*/
+		return null;
 	}
 }
 

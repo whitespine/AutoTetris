@@ -11,17 +11,22 @@ import autotetris.controller.AIConfiguratorController;
 import autotetris.controller.ExecutionController;
 import autotetris.controller.HumanInputPieceController;
 import autotetris.model.Model;
+import autotetris.model.TetrisSolver;
 
 public class Application extends JFrame {
 
 	private static final long serialVersionUID = 1341549472797373358L;
 	public static final Color BACKGROUND_COLOR = Color.BLACK;
 	private JPanel contentPane;
-	
+
+	// Sim state
+    private TetrisSolver solver;
+    public Model model;
+
+	// UI Garbage
 	private GamePanel gamePanel;
 	private JLabel lblScore;
 	private NextPiecePanel nextPiecePanel;
-	Model model;
 	private JMenuBar menuBar;
 	private JMenuItem mntmPlay;
 	private JMenuItem mntmPause;
@@ -41,6 +46,7 @@ public class Application extends JFrame {
 		setBounds(100, 100, 252, 449);
 		
 		model = m;
+		solver = new TetrisSolver();
 		Application self = this;
 		this.addKeyListener(new HumanInputPieceController(model, this));
 		
@@ -75,9 +81,7 @@ public class Application extends JFrame {
 		
 		mntmTrain = new JMenuItem("Train");
 		mntmTrain.addActionListener(e -> {
-            self.disableControls();
-            new ExecutionController(model, self).reset();
-            model.train(self);
+            // TODO: Maybe actually do something here
         });
 		mnAiOptions.add(mntmTrain);
 		
@@ -86,9 +90,7 @@ public class Application extends JFrame {
 
 		mntmAIPlay = new JMenuItem("Play Self");
 		mntmAIPlay.addActionListener(e -> {
-            self.disableControls();
-
-            model.train(self);
+            // TODO: implement
         });
 		mntmAIPlay.add(mntmTrain);
 
@@ -97,7 +99,7 @@ public class Application extends JFrame {
 		
 		mntmPreferences = new JMenuItem("Preferences...");
 		mntmPreferences.addActionListener(arg0 -> {
-            new AIConfiguratorController(model, self).fillConfigurator();
+            new AIConfiguratorController(self).fillConfigurator();
             aic.setVisible(true);
         });
 		mnAiOptions.add(mntmPreferences);
@@ -183,39 +185,16 @@ public class Application extends JFrame {
 	}
 
 	public void bindExecutionController(ExecutionController ec) {
-		mntmPlay.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				ec.play();
-			}
-		});
-		mntmPause.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				ec.pause();
-			}
-		});
-		mntmReset.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				ec.reset();
-			}
-		});
+		mntmPlay.addActionListener(e -> ec.play());
+		mntmPause.addActionListener(e -> ec.pause());
+		mntmReset.addActionListener(e -> ec.reset());
 	}
 
 	public AIConfigurator getAIConfigurator() {
 		return aic;
 	}
-	
-	public void disableControls() {
-		mntmPlay.setEnabled(false);
-		mntmPause.setEnabled(false);
-		mntmReset.setEnabled(false);
-		mntmPreferences.setEnabled(false);
-	}
-	
-	public void enableControls() {
-		mntmPlay.setEnabled(true);
-		mntmPause.setEnabled(true);
-		mntmReset.setEnabled(true);
-		mntmPreferences.setEnabled(true);
-	}
 
+    public TetrisSolver getSolver() {
+        return solver;
+    }
 }

@@ -167,32 +167,24 @@ public class AIConfigurator extends JFrame {
 		panel_2.setLayout(new FlowLayout(FlowLayout.RIGHT, 5, 5));
 		
 		JButton btnOk = new JButton("OK");
-		btnOk.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				if (new AIConfiguratorController(parent.model, parent).writeConfiguration(iterSpinner.getValue(), 
-						totalHeight_wtfield.getText(), rows_wtfield.getText(), holes_wtfield.getText(), heightvar_wtfield.getText()))
-					parent.getAIConfigurator().setVisible(false);
-			}
-		});
+		btnOk.addActionListener(e -> {
+            if (new AIConfiguratorController(parent).writeConfiguration(iterSpinner.getValue(),
+                    totalHeight_wtfield.getText(), rows_wtfield.getText(), holes_wtfield.getText(), heightvar_wtfield.getText()))
+                parent.getAIConfigurator().setVisible(false);
+        });
 		panel_2.add(btnOk);
 		
 		JButton btnCancel = new JButton("Cancel");
-		btnCancel.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				parent.getAIConfigurator().setVisible(false);
-			}
-		});
+		btnCancel.addActionListener(e -> parent.getAIConfigurator().setVisible(false));
 		panel_2.add(btnCancel);
 		
 		JButton btnApply = new JButton("Apply");
-		btnApply.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				AIConfiguratorController aicc = new AIConfiguratorController(parent.model, parent);
-				aicc.writeConfiguration(iterSpinner.getValue(), 
-						totalHeight_wtfield.getText(), rows_wtfield.getText(), holes_wtfield.getText(), heightvar_wtfield.getText());
-				aicc.fillConfigurator();
-			}
-		});
+		btnApply.addActionListener(e -> {
+            AIConfiguratorController aicc = new AIConfiguratorController(parent);
+            aicc.writeConfiguration(iterSpinner.getValue(),
+                    totalHeight_wtfield.getText(), rows_wtfield.getText(), holes_wtfield.getText(), heightvar_wtfield.getText());
+            aicc.fillConfigurator();
+        });
 		panel_2.add(btnApply);
 	}
 

@@ -2,24 +2,24 @@ package autotetris.controller;
 
 import javax.swing.JOptionPane;
 
-import autotetris.model.Model;
+import autotetris.model.TetrisSolver;
+import autotetris.view.AIConfigurator;
 import autotetris.view.Application;
 
 public class AIConfiguratorController {
-	Model model;
-	Application app;
+	private Application app;
 	
-	public AIConfiguratorController(Model model, Application app) {
-		this.model = model;
+	public AIConfiguratorController(Application app) {
 		this.app = app;
 	}
  	
 	public void fillConfigurator() {
-		app.getAIConfigurator().getIterSpinner().setValue(model.getTrainingIterations());
-		app.getAIConfigurator().getTotalHeight_wtfield().setText("" + model.getSolver().getTotalHeightWeight());
-		app.getAIConfigurator().getRows_wtfield().setText("" + model.getSolver().getCompleteLinesWeight());
-		app.getAIConfigurator().getHoles_wtfield().setText("" + model.getSolver().getHolesWeight());
-		app.getAIConfigurator().getHeightvar_wtfield().setText("" + model.getSolver().getHeightVarianceWeight());
+		//app.getAIConfigurator().getIterSpinner().setValue(model.getTrainingIterations());
+        AIConfigurator config = app.getAIConfigurator();
+        config.getTotalHeight_wtfield().setText("" + app.getSolver().totalHeightWeight);
+        config.getRows_wtfield().setText("" + app.getSolver().completeLinesWeight);
+        config.getHoles_wtfield().setText("" + app.getSolver().holesWeight);
+        config.getHeightvar_wtfield().setText("" + app.getSolver().heightVarianceWeight);
 	}
 
 	public boolean writeConfiguration(Object iterations, String totalHeight_wts, String completeLines_wts, String holes_wts, String heightVariation_wts) {
@@ -35,12 +35,12 @@ public class AIConfiguratorController {
 		}
 		if ((iterations instanceof Integer) == false)
 			return false;
-		
-		model.getSolver().setCompleteLinesWeight(completeLines_wt);
-		model.getSolver().setHeightVarianceWeight(heightVariation_wt);
-		model.getSolver().setHolesWeight(holes_wt);
-		model.getSolver().setTotalHeightWeight(totalHeight_wt);
-		Model.setTrainingIterations((Integer)iterations);
+
+        TetrisSolver solver = app.getSolver();
+        solver.completeLinesWeight = completeLines_wt;
+        solver.heightVarianceWeight = heightVariation_wt;
+        solver.holesWeight = holes_wt;
+        solver.totalHeightWeight = totalHeight_wt;
 		return true;
 	}
 }

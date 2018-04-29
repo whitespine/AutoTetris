@@ -143,7 +143,20 @@ public class Explorer {
         }
     }
 
-    public static class ActionSequence {
+    public class ActionSequence {
         public LinkedList<Action> actions = new LinkedList<>();
+
+        // Returns what the board looks like with this model
+        public Model rolloutModel(Model m) {
+            m = new Model(m);
+            for(Action a : actions) {
+                m.doAction(a);
+            }
+
+            // Finalize with a down
+            m.doAction(Action.Down);
+
+            return m;
+        }
     }
 }
