@@ -14,7 +14,6 @@ public class TetrisTrainer {
 		List<Model> games = new ArrayList<Model>();
 		for (int i = 0; i < CANDIDATES; i++) {
 			Model m = new Model();
-			m.DROP_PER_TICK = 0.5;
 			double[] weights = new double[4];
 			double sum = 0;
 			for (int j = 0; j < 4; j++) {
@@ -24,10 +23,10 @@ public class TetrisTrainer {
 			for (int j = 0; j < 4; j++)
 				weights[j] /= Math.sqrt(sum);
 			
-			m.ai.completeLinesWeight = weights[0];
-			m.ai.heightVarianceWeight = weights[1];
-			m.ai.holesWeight = weights[2];
-			m.ai.totalHeightWeight = weights[3];
+			m.getSolver().completeLinesWeight = weights[0];
+			m.getSolver().heightVarianceWeight = weights[1];
+			m.getSolver().holesWeight = weights[2];
+			m.getSolver().totalHeightWeight = weights[3];
 			games.add(m);
 		}
 		

@@ -3,7 +3,9 @@ package autotetris.controller;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
+import autotetris.model.Cell;
 import autotetris.model.Model;
+import autotetris.model.Rotation;
 import autotetris.view.Application;
 
 public class HumanInputPieceController implements KeyListener {
@@ -20,15 +22,16 @@ public class HumanInputPieceController implements KeyListener {
 	public void keyPressed(KeyEvent evt) {
 		int keyCode = evt.getExtendedKeyCode();
 		if (keyCode == KeyEvent.VK_UP || keyCode == KeyEvent.VK_KP_UP || keyCode == KeyEvent.VK_W) {
-			model.moveFallingPiece(0, 0, 1);
+			model.tryRotateFallingPiece(Rotation.CLOCKWISE);
 		} else if (keyCode == KeyEvent.VK_DOWN || keyCode == KeyEvent.VK_KP_DOWN || keyCode == KeyEvent.VK_S) {
-			model.moveFallingPiece(0, 0, -1);
+			// model.tryRotateFallingPiece(Rotation.COUNTERCLOCKWISE);
+			model.tryMoveFallingPiece(Cell.DOWN, true);
 		} else if (keyCode == KeyEvent.VK_LEFT || keyCode == KeyEvent.VK_KP_LEFT || keyCode == KeyEvent.VK_A) {
-			model.moveFallingPiece(-1, 0, 0);
+			model.tryMoveFallingPiece(Cell.LEFT, false);
 		} else if (keyCode == KeyEvent.VK_RIGHT || keyCode == KeyEvent.VK_KP_RIGHT || keyCode == KeyEvent.VK_D) {
-			model.moveFallingPiece(1, 0, 0);
+			model.tryMoveFallingPiece(Cell.RIGHT, false);
 		} else if (keyCode == KeyEvent.VK_SPACE) {
-			model.applyCurrentRolloutBoard();
+			model.drop();
 		}
 		app.repaint();
 	}

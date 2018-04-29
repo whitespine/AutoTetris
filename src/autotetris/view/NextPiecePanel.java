@@ -5,6 +5,8 @@ import java.awt.Graphics;
 
 import javax.swing.*;
 
+import autotetris.model.Cell;
+import autotetris.model.Tetromino;
 import autotetris.model.TetrominoPrototype;
 
 public class NextPiecePanel extends JPanel {
@@ -18,6 +20,11 @@ public class NextPiecePanel extends JPanel {
 
 	public void paintComponent(Graphics g) {
 		TetrominoPrototype tp = app.model.getNextPiece();
+
+		// Make a fake tetromino
+		Tetromino t = new Tetromino(tp, new Cell(1, 1));
+
+
 		if (tp != null) {
 			// find square
 			Dimension size = this.getSize();
@@ -29,11 +36,10 @@ public class NextPiecePanel extends JPanel {
 			g.fillRect(xoff, yoff, (squareSize + 1) * tp.getOrientations()[0].length + 2 * PADDING - 1,
 									(squareSize + 1) * tp.getOrientations()[0].length + 2 * PADDING - 1);
 			g.setColor(tp.color);
-			for (int y = 0; y < tp.getOrientations()[0].length; y++) {
-				for (int x = 0; x < tp.getOrientations()[0][0].length; x++) {
-					if (tp.getOrientations()[0][y][x])
-						g.fillRect(PADDING + xoff + (squareSize + 1) * x, PADDING + yoff + (squareSize + 1) * y, squareSize, squareSize);
-				}
+			for(Cell c : t.project()) {
+				int y = c.row;
+				int x = c.col;
+				g.fillRect(PADDING + xoff + (squareSize + 1) * x, PADDING + yoff + (squareSize + 1) * y, squareSize, squareSize);
 			}
 		}
 	}

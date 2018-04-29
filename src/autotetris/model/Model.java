@@ -1,50 +1,53 @@
 package autotetris.model;
 
-import java.awt.Color;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import javax.swing.JOptionPane;
 
 import autotetris.view.Application;
 
 public class Model {
-	public static final int BOARD_WIDTH = 20, BOARD_HEIGHT = 22, MAX_DEBOUNCE_TICKS = 8;
-	double DROP_PER_TICK = 0.01;
-	
-	BoardItem board[][];
-	int piecesDropped, rowScore, debounce = 0;
-	ArrayList<TetrominoPrototype> allPieces;
-	Tetromino fallingPiece;
-	boolean gameOver = false;
-	TetrisSolver ai;
+    public int MS_PER_DROP = 500;
+	public static final int BOARD_WIDTH = 20, BOARD_HEIGHT = 22;
+
+	// Represents occupied spaces on the board.
+	public boolean board[][]; // True = full
+
+	// Represents scorestate
+	int piecesDropped, rowScore;
+    private boolean gameOver = false;
+
+	// Handles generating new pieces
+	private PieceGenerator pieceGen;
+
+	// The current falling piece
+	private Tetromino fallingPiece;
+
+	// The AI
+	private TetrisSolver ai;
 	public static TetrisTrainer trainer = new TetrisTrainer();
 
+    // Timing
+    private long lastDown = 0; // Last time piece was moved down
+
+	////////////////////////////////////// Main Logic /////////////////////////////////////////////////////
+
 	public Model() {
-		board = new BoardItem[BOARD_HEIGHT][BOARD_WIDTH];
-		allPieces = new ArrayList<TetrominoPrototype>();
+		board = new boolean[BOARD_HEIGHT][BOARD_WIDTH];
 		trainer.iterations = 500;
 		ai = new TetrisSolver();
-		
-		try {
-			initializePieces();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+
+        this.pieceGen = new PieceGenerator(TetrominoPrototype.initializePieces());
 		
 		setupGameState();
 	}
 
-	public BoardItem[][] getBoard() {
-		return board;
-	}
-	
 	public Tetromino getFallingPiece() {
 		return fallingPiece;
 	}
-	
+
 	public TetrominoPrototype getNextPiece() {
-		return allPieces.get(piecesDropped % allPieces.size());
+		return pieceGen.peekNext();
 	}
 	
 	public int getScore() {
@@ -54,7 +57,126 @@ public class Model {
 	public boolean isGameOver() {
 		return gameOver;
 	}
-	
+
+    public void setupGameState() {
+        fallingPiece = null;
+        gameOver = false;
+        piecesDropped = 0;
+        rowScore = 0;
+        for (int i = 0; i < BOARD_HEIGHT; i++)
+            for (int j = 0; j < BOARD_WIDTH; j++)
+                board[i][j] = false;
+        lastDown = System.currentTimeMillis();
+        dropPiece();
+    }
+
+    // Returns which cells are expected to be filled when we bottom out.
+    public ArrayList<Cell> getExpectedDrop() {
+	    if(fallingPiece == null)
+	        return new ArrayList<>();
+
+	    // Go to bottom
+        boolean moved = false;
+	    Tetromino tCopy = new Tetromino(fallingPiece);
+	    while(allFree(tCopy.project())) {
+	        moved = true;
+	        tCopy.move(Cell.DOWN);
+        }
+
+        //Undo last move if necessary
+        if(moved)
+            tCopy.move(Cell.UP);
+
+        // Return projected spaces.
+        return tCopy.project();
+    }
+
+    // Return which cells of getExpectedDrop to render by blotting those in fallingPiece
+    public ArrayList<Cell> getPredictedCells() {
+	    if(fallingPiece == null)
+	        return new ArrayList<>();
+
+        ArrayList<Cell> fPiece = fallingPiece.project();
+        ArrayList<Cell> predicted = new ArrayList<>();
+        for(Cell c : getExpectedDrop()) {
+            if(fPiece.contains(c))
+                continue;
+            else
+                predicted.add(c);
+        }
+        return predicted;
+    }
+
+    // Gets this board's state if you just hit space like, right now.
+    public boolean[][] getPredictedBoardState() {
+        // Duplicate the board
+	    boolean[][] ret = new boolean[BOARD_WIDTH][];
+        for(int row=0; row<BOARD_HEIGHT; row++)
+            ret[row] = board[row].clone();
+
+        // Slot in predicts
+        for(Cell c : getExpectedDrop())
+            ret[c.row][c.col] = true;
+        return ret;
+    }
+
+    //////////////////////////////////// STEPPING GAME STATE /////////////////////////////////////////////////////
+    // Tries to clear all rows, if possible.
+    private void tryClear() {
+        // Clear rows
+        int clearCount = 0;
+        for(int r=0; r < BOARD_HEIGHT; r++) {
+            if (isRowFilled(r)) {
+                clearRow(r);
+                rowScore++;
+
+                // Do the same r again
+                r--;
+            }
+        }
+        rowScore += (clearCount * (clearCount+1)); // Quadratic for more rewarding big clears
+    }
+
+    // Reminds the model to force a drop if necessary
+    public void tick() {
+        // Lower piece if we have one. Make a new piece if we don't
+        if (System.currentTimeMillis() - lastDown > MS_PER_DROP) {
+            tryMoveFallingPiece(Cell.DOWN, true);
+        }
+    }
+
+    // When a piece bottoms out, solidify it
+    private void finalizeDrop() {
+        // Fill in the projection of the piece.
+        // If any are above row 0 (top), u lose
+        for(Cell c : fallingPiece.project()) {
+            if(c.row < 0) {
+                gameOver = true;
+            } else {
+                //Otherwise just set to be filled
+                board[c.row][c.col] = true;
+            }
+        }
+
+        // Do clears if possible
+        tryClear();
+
+        // We're done with this faller - get a new one
+        dropPiece();
+    }
+
+    private void dropPiece() {
+        fallingPiece = new Tetromino(pieceGen.getNext(), new Cell(0, BOARD_WIDTH / 2));
+        piecesDropped += 1;
+        lastDown = System.currentTimeMillis();
+    }
+
+    public void drop() {
+        while (tryMoveFallingPiece(Cell.DOWN, true));
+    }
+
+	//////////////////////////////////// AI SHIT /////////////////////////////////////////////////////
+
 	public int getTrainingIterations() {
 		return trainer.iterations;
 	}
@@ -67,201 +189,121 @@ public class Model {
 		return ai;
 	}
 
-	public void setupGameState() {
-		fallingPiece = null;
-		gameOver = false;
-		piecesDropped = 0;
-		rowScore = 0;
-		for (int i = 0; i < BOARD_HEIGHT; i++)
-			for (int j = 0; j < BOARD_WIDTH; j++)
-				board[i][j] = BoardItem.Open;
-	}
-	
-	public int tick() throws InterruptedException {
-		// Clear rows
-		List<Boolean> filledRows = Arrays.stream(board).map(row -> 
-				Arrays.stream(row).map(it -> it == BoardItem.Filled).reduce(true, (a, b) -> a && b).booleanValue()).collect(Collectors.toList());
-		if (filledRows.contains(true)) {
-			int rowMove = 0;
-			for (int y = BOARD_HEIGHT - 1; y >= 0; y--) {
-				if (filledRows.get(y))
-					rowMove++;
-				if (y >= rowMove)
-					board[y] = Arrays.copyOf(board[y - rowMove], board[y - rowMove].length);
-			}
-			for (int i = 0; i < rowMove; i++)
-				Arrays.fill(board[i], BoardItem.Open);
-			rowScore += rowMove * (rowMove + 1);
-		}
-		
-		// Drop piece
-		if (fallingPiece == null) {
-			fallingPiece = new Tetromino(getNextPiece(), BOARD_WIDTH / 2, 0);
-			if (piecesDropped++ % allPieces.size() == 0)
-				Collections.shuffle(allPieces);
-		} else {
-			if (moveConflict(0, DROP_PER_TICK, 0)) {
-				Thread.sleep(10);
-				int pieceX = fallingPiece.x, pieceY = (int)Math.ceil(fallingPiece.y + DROP_PER_TICK),
-						pieceSize = fallingPiece.prototype.orientations[0].length;
-				boolean[][] currentOrientation = fallingPiece.prototype.orientations[fallingPiece.orientation];
-				for (int x = 0; x < pieceSize; x++) {
-					for (int y = 0; y < pieceSize; y++) {
-						if (currentOrientation[y][x]) {
-							if (pieceY - y - 1 < 0) {
-								gameOver = true;
-								return -1;
-							}
-							board[pieceY - y - 1][pieceX + x] = BoardItem.Filled;
-						}
-					}
-				}
-				fallingPiece = null;
-			} else fallingPiece.move(0, DROP_PER_TICK);
-				
-		}
-		return (int)(400 * DROP_PER_TICK);
-	}
-	
-	public BoardItem[][] generateRolloutBoard(BoardItem[][] cBoard, Tetromino piece) {
-		if (cBoard == null) {
-			cBoard = new BoardItem[BOARD_HEIGHT][BOARD_WIDTH];
-			for (int i = 0; i < BOARD_HEIGHT; i++)
-				for (int j = 0; j < BOARD_WIDTH; j++)
-					cBoard[i][j] = board[i][j];
-		}
-		if (piece == null)
-			return cBoard;
-		int pieceX = fallingPiece.x, pieceY = (int)Math.ceil(fallingPiece.y),
-				pieceSize = fallingPiece.prototype.orientations[0].length;
-		boolean[][] currentOrientation = fallingPiece.prototype.orientations[fallingPiece.orientation];
-		
-		// drop piece until collision
-		int dy = 0;
-		while (!moveConflict(0, dy, 0)) dy++;
-		pieceY += dy;
+    public void train(Application app) {
+        Model self = this;
+        new Thread() {
+            public void run() {
+                TetrisSolver ts = Model.trainer.train();
+                if (ts != null)
+                    self.ai = ts;
+                javax.swing.SwingUtilities.invokeLater(new Runnable() {
+                    public void run() {
+                        JOptionPane.showMessageDialog(app,
+                                ts == null ? "Solver could not be trained." : "Solver was successfully trained.", "Training Status",
+                                ts == null ? JOptionPane.ERROR_MESSAGE : JOptionPane.INFORMATION_MESSAGE);
+                        app.enableControls();
+                    }
+                });
+            }
+        }.start();
+    }
 
-		for (int y = 0; y < pieceSize; y++) {
-			for (int x = 0; x < pieceSize; x++) {
-				if (currentOrientation[y][x]) {
-					if (pieceY - y - 1 >= 0 && pieceY - y - 1 < BOARD_HEIGHT)
-						cBoard[pieceY - y - 1][pieceX + x] = BoardItem.Potential;
-				}
-			}
-		}
-		return cBoard;
-	}
-	
-	public void applyCurrentRolloutBoard() {
-		BoardItem[][] roBoard = this.generateRolloutBoard(board, fallingPiece);
-		for (int i = 0; i < roBoard.length; i++)
-			for (int j = 0; j < roBoard[i].length; j++)
-				if (roBoard[i][j] == BoardItem.Potential)
-					roBoard[i][j] = BoardItem.Filled;
-		fallingPiece = null;
-	}
-	
-	public boolean moveFallingPiece(int dx, double dy, int direction) {
-		if (moveConflict(dx, dy, direction))
-			return false;
-		else {
-			fallingPiece.move(dx, dy);
-			fallingPiece.rotate(direction);
-			return true;
-		}
+
+    //////////////////////////////////// MOVEMENT LOGIC /////////////////////////////////////////////////////
+    public boolean tryMoveFallingPiece(Cell deltaPosition, boolean isDown) {
+        /*
+		Returns true if moving the falling piece in a given direction succeeds.
+		If isDown, has extra logic that finalizes the piece if movement fails.
+		 */
+        if(fallingPiece == null)
+            return false;
+
+        // Make a copy
+        Tetromino tClone = new Tetromino(fallingPiece);
+
+        // Move it
+        tClone.move(deltaPosition);
+
+        // If it's fine, keep it
+		if (allFree(tClone.project())) {
+            fallingPiece = tClone;
+            // Update timer if we went down
+            if(isDown)
+                lastDown = System.currentTimeMillis();
+            return true;
+        } else {
+		    if(isDown)
+		        finalizeDrop();
+		    return false;
+        }
 	}
 
-	public void train(Application app) {
-		Model self = this;
-		new Thread() {
-			public void run() {
-				TetrisSolver ts = Model.trainer.train();
-				if (ts != null)
-					self.ai = ts;
-				javax.swing.SwingUtilities.invokeLater(new Runnable() {
-					public void run() {
-						JOptionPane.showMessageDialog(app, 
-								ts == null ? "Solver could not be trained." : "Solver was successfully trained.", "Training Status", 
-								ts == null ? JOptionPane.ERROR_MESSAGE : JOptionPane.INFORMATION_MESSAGE);
-						app.enableControls();
-					}
-				});
-			}
-		}.start();
-	}
-	
-	private boolean moveConflict(int dx, double dy, int direction) {
-		if (fallingPiece == null) return false;
-		
-		BoardItem[][] tempBoard = new BoardItem[BOARD_HEIGHT][BOARD_WIDTH];
-		
-		int newOrientation = (fallingPiece.orientation + direction) % fallingPiece.prototype.orientations.length;
-		while (newOrientation < 0) newOrientation += fallingPiece.prototype.orientations.length;
-		
-		for (int i = 0; i < BOARD_HEIGHT; i++)
-			for (int j = 0; j < BOARD_WIDTH; j++)
-				tempBoard[i][j] = board[i][j];
-		
-		int pieceX = fallingPiece.x + dx, pieceY = (int)Math.ceil(fallingPiece.y + dy),
-				pieceSize = fallingPiece.prototype.orientations[0].length;
-		
-		
-		for (int x = 0; x < pieceSize; x++) {
-			for (int y = 0; y < pieceSize; y++) {
-				if (fallingPiece.prototype.orientations[newOrientation][y][x]) {
-					// Check for collision with left and right sides and the bottom
-					if ((pieceX + x) < 0 || (pieceX + x) >= BOARD_WIDTH || (pieceY - y) >= BOARD_HEIGHT)
-						return true;
-					// Check for collision with other pieces on the board
-					if ((pieceX + x) >= 0 && (pieceX + x) < BOARD_WIDTH && 
-							(pieceY - y) >= 0 && (pieceY - y) < BOARD_HEIGHT && 
-							board[pieceY - y][pieceX + x] == BoardItem.Filled)
-						return true;
-				}
-			}
-		}
-		
-		return false;
-	}
-	
-	private void initializePieces() throws Exception {
-		TetrominoPrototype I = new TetrominoPrototype("I", Color.CYAN, new boolean[][]{
-					{false, false, true, false}, 
-					{false, false, true, false}, 
-					{false, false, true, false}, 
-					{false, false, true, false}}),
-				J = new TetrominoPrototype("J", Color.BLUE, new boolean[][]{
-					{false, true, true}, 
-					{false, true, false}, 
-					{false, true, false}}),
-				L = new TetrominoPrototype("L", Color.ORANGE, new boolean[][]{
-					{false, true, false}, 
-					{false, true, false}, 
-					{false, true, true}}),
-				O = new TetrominoPrototype("O", Color.YELLOW, null), // special case
-				S = new TetrominoPrototype("S", Color.GREEN, new boolean[][]{
-					{false, true, true}, 
-					{true, true, false}, 
-					{false, false, false}}),
-				T = new TetrominoPrototype("T", new Color(128, 0, 255), new boolean[][]{
-					{false, true, false}, 
-					{true, true, true}, 
-					{false, false, false}}),
-				Z = new TetrominoPrototype("Z", Color.RED, new boolean[][]{
-					{true, true, false}, 
-					{false, true, true}, 
-					{false, false, false}});
-		
-		boolean[][] o_orientation = new boolean[][]{{true, true}, {true, true}};
-		for (int i = 0; i < 4; i++)
-			O.orientations[i] = o_orientation;
-		
-		allPieces.add(I);
-		allPieces.add(J);
-		allPieces.add(L);
-		allPieces.add(O);
-		allPieces.add(S);
-		allPieces.add(T);
-		allPieces.add(Z);
-	}
+	// Returns true if succesfully rotates
+	public boolean tryRotateFallingPiece(Rotation rotation) {
+        /*
+		Returns true if rotating the falling piece in a given direction succeeds
+		 */
+        if(fallingPiece == null)
+            return false;
+
+        // Make a copy
+        Tetromino tClone = new Tetromino(fallingPiece);
+
+        // Move it
+        tClone.rotate(rotation);
+
+        // If it's fine, keep it
+        if (allFree(tClone.project())) {
+            fallingPiece = tClone;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    // Returns true if all listed cells are free
+    private boolean allFree(ArrayList<Cell> positions) {
+	    for(Cell c : positions) {
+	        if(!isCellFree(c, true))
+	            return false;
+        }
+        return true;
+    }
+
+    //////////////////////////////////// SPACE-FILLING LOGIC /////////////////////////////////////////////////////
+
+    // Gives true if te given row (from base) is filled
+    private boolean isRowFilled(int row) {
+        for(int col = 0; col < BOARD_WIDTH; col++) {
+            if (!board[row][col])
+                return false;
+        }
+        return true;
+    }
+
+    // Wipes the specified row, and moves all rows above, down
+    private void clearRow(int row) {
+        // Do all except topmost row
+	    for(; row > 0; row--) {
+            for (int col = 0; col < BOARD_WIDTH; col++) {
+                if (row == 0)
+                    board[row][col] = false;
+                else
+                    board[row][col] = board[row - 1][col];
+            }
+        }
+    }
+
+    // Returns true if a cell is in the board, and open.
+    // If "allowTop" given, considers above the board to be free.
+	private boolean isCellFree(Cell c, boolean allowTop) {
+	    if(allowTop && c.row < 0)
+	        return c.col >= 0 && c.col < BOARD_WIDTH; // Only care that its within bounds
+	    else
+	        return      c.row >= 0 && c.row < BOARD_HEIGHT
+                    &&  c.col >= 0 && c.col < BOARD_WIDTH
+                    && !board[c.row][c.col];
+    }
+
 }
+

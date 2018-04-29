@@ -43,10 +43,10 @@ public class TetrisSolver {
 	}
 	
 	public double score(Evaluation ev) {
-		return totalHeightWeight * ev.totalHeight
-				+ completeLinesWeight * ev.completeLines
-				+ holesWeight * ev.holes
-				+ heightVarianceWeight * ev.heightVariance;
+		return totalHeightWeight * ev.getTotalHeight()
+				+ completeLinesWeight * ev.getCompleteLines()
+				+ holesWeight * ev.getHoles()
+				+ heightVarianceWeight * ev.getHeightVariance();
 	}
 	
 	public void execute() {

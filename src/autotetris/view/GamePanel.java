@@ -8,7 +8,7 @@ import java.awt.geom.Rectangle2D;
 
 import javax.swing.JPanel;
 
-import autotetris.model.BoardItem;
+import autotetris.model.Cell;
 import autotetris.model.Model;
 import autotetris.model.Tetromino;
 
@@ -24,44 +24,44 @@ public class GamePanel extends JPanel {
 	}
 	
 	public void paintComponent(Graphics g) {
+        // Get the board
+        boolean[][] board = app.model.board;
+
+        // Compute how big to draw squares
 		Dimension size = this.getSize();
 		int xUnitSize = size.width / Model.BOARD_WIDTH, yUnitSize = size.height / Model.BOARD_HEIGHT,
 				xoff = size.width - Model.BOARD_WIDTH * xUnitSize,
 				yoff = size.height - Model.BOARD_HEIGHT * yUnitSize;
-		BoardItem[][] board = app.model.generateRolloutBoard(null, app.model.getFallingPiece());
-		
+
+		//Draw background
 		g.setColor(Application.BACKGROUND_COLOR);
 		g.fillRect(xoff / 2, 0, Model.BOARD_WIDTH * xUnitSize, size.height);
-		
+
+		// Draw dropped stuff
 		g.setColor(DROPPED_SQUARE_COLOR);
 		for (int y = 0; y < Model.BOARD_HEIGHT; y++) {
 			for (int x = 0; x < Model.BOARD_WIDTH; x++) {
-				if (board[y][x] == BoardItem.Filled)
+				if (board[y][x])
 					g.fillRect(x * xUnitSize + xoff / 2, y * yUnitSize + yoff, xUnitSize - 1, yUnitSize - 1);
 			}
 		}
-		
+
+		// Draw potentials
 		g.setColor(POTENTIAL_SQUARE_COLOR);
-		for (int y = 0; y < Model.BOARD_HEIGHT; y++) {
-			for (int x = 0; x < Model.BOARD_WIDTH; x++) {
-				if (board[y][x] == BoardItem.Potential)
-					g.fillRect(x * xUnitSize + xoff / 2, y * yUnitSize + yoff, xUnitSize - 1, yUnitSize - 1);
-			}
+		for(Cell c : app.model.getPredictedCells()) {
+		    int y = c.row;
+		    int x = c.col;
+            g.fillRect(x * xUnitSize + xoff / 2, y * yUnitSize + yoff, xUnitSize - 1, yUnitSize - 1);
 		}
-		
+
+		// Draw falling piece
 		Tetromino fallingPiece = app.model.getFallingPiece();
 		if (fallingPiece != null) {
-			int spriteSize = fallingPiece.prototype.getOrientations()[0].length,
-					orientationIndex = fallingPiece.getOrientation();
 			g.setColor(fallingPiece.prototype.color);
-			for (int y = 0; y < spriteSize; y++) {
-				for (int x = 0; x < spriteSize; x++) {
-					if (fallingPiece.prototype.getOrientations()[orientationIndex][y][x]) {
-						g.fillRect((fallingPiece.getX() + x) * xUnitSize + xoff / 2, 
-								(int)((fallingPiece.getY() - y) * yUnitSize + yoff), 
-								xUnitSize - 1, yUnitSize - 1);
-					}
-				}
+			for(Cell c : fallingPiece.project()) {
+                int y = c.row;
+                int x = c.col;
+                g.fillRect(x * xUnitSize + xoff / 2, y * yUnitSize + yoff, xUnitSize - 1, yUnitSize - 1);
 			}
 		}
 		
@@ -77,7 +77,6 @@ public class GamePanel extends JPanel {
 			
 			g.setColor(Color.RED);
 			g.drawString("Game Over", (int)((getWidth() - sBounds.getWidth()) / 2), (int)((getHeight() + sBounds.getHeight()) / 2));
-			
 		}
 	}
 }
