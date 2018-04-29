@@ -3,6 +3,7 @@ package autotetris.controller;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
+import autotetris.model.Action;
 import autotetris.model.Cell;
 import autotetris.model.Model;
 import autotetris.model.Rotation;
@@ -22,16 +23,15 @@ public class HumanInputPieceController implements KeyListener {
 	public void keyPressed(KeyEvent evt) {
 		int keyCode = evt.getExtendedKeyCode();
 		if (keyCode == KeyEvent.VK_UP || keyCode == KeyEvent.VK_KP_UP || keyCode == KeyEvent.VK_W) {
-			model.tryRotateFallingPiece(Rotation.CLOCKWISE);
+			model.doAction(Action.Spin);
 		} else if (keyCode == KeyEvent.VK_DOWN || keyCode == KeyEvent.VK_KP_DOWN || keyCode == KeyEvent.VK_S) {
-			// model.tryRotateFallingPiece(Rotation.COUNTERCLOCKWISE);
-			model.tryMoveFallingPiece(Cell.DOWN, true);
+            model.doAction(Action.Down);
 		} else if (keyCode == KeyEvent.VK_LEFT || keyCode == KeyEvent.VK_KP_LEFT || keyCode == KeyEvent.VK_A) {
-			model.tryMoveFallingPiece(Cell.LEFT, false);
+            model.doAction(Action.Left);
 		} else if (keyCode == KeyEvent.VK_RIGHT || keyCode == KeyEvent.VK_KP_RIGHT || keyCode == KeyEvent.VK_D) {
-			model.tryMoveFallingPiece(Cell.RIGHT, false);
+            model.doAction(Action.Right);
 		} else if (keyCode == KeyEvent.VK_SPACE) {
-			model.drop();
+            model.doAction(Action.Drop);
 		}
 		app.repaint();
 	}

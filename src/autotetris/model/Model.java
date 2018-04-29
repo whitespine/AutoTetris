@@ -1,5 +1,6 @@
 package autotetris.model;
 
+import java.awt.event.KeyEvent;
 import java.util.*;
 
 import javax.swing.JOptionPane;
@@ -7,15 +8,17 @@ import javax.swing.JOptionPane;
 import autotetris.view.Application;
 
 public class Model {
-    public int MS_PER_DROP = 500;
-	public static final int BOARD_WIDTH = 20, BOARD_HEIGHT = 22;
-
-	// Represents occupied spaces on the board.
-	public boolean board[][]; // True = full
+    public static final int BOARD_WIDTH = 10, BOARD_HEIGHT = 22;
+    public static final int MS_PER_DROP = 500; // How long the human is given to drop.
+    public static final int ACTIONS_PER_DROP = 8; // How many keypresses the AI can do per drop.
 
 	// Represents scorestate
-	int piecesDropped, rowScore;
+	private int piecesDropped;
+    private int rowScore;
     private boolean gameOver = false;
+
+    // Represents occupied spaces on the board.
+    public boolean board[][]; // True = full
 
 	// Handles generating new pieces
 	private PieceGenerator pieceGen;
@@ -175,6 +178,26 @@ public class Model {
         while (tryMoveFallingPiece(Cell.DOWN, true));
     }
 
+    public void doAction(Action a) {
+        switch (a) {
+            case Down:
+                tryMoveFallingPiece(Cell.DOWN, true);
+                break;
+            case Left:
+                tryMoveFallingPiece(Cell.LEFT, false);
+                break;
+            case Right:
+                tryMoveFallingPiece(Cell.RIGHT, false);
+                break;
+            case Spin:
+                tryRotateFallingPiece(Rotation.CLOCKWISE);
+                break;
+            case Drop:
+                drop();
+                break;
+        }
+    }
+
 	//////////////////////////////////// AI SHIT /////////////////////////////////////////////////////
 
 	public int getTrainingIterations() {
@@ -207,7 +230,6 @@ public class Model {
             }
         }.start();
     }
-
 
     //////////////////////////////////// MOVEMENT LOGIC /////////////////////////////////////////////////////
     public boolean tryMoveFallingPiece(Cell deltaPosition, boolean isDown) {
@@ -262,7 +284,7 @@ public class Model {
     }
 
     // Returns true if all listed cells are free
-    private boolean allFree(ArrayList<Cell> positions) {
+    public boolean allFree(ArrayList<Cell> positions) {
 	    for(Cell c : positions) {
 	        if(!isCellFree(c, true))
 	            return false;
@@ -296,7 +318,7 @@ public class Model {
 
     // Returns true if a cell is in the board, and open.
     // If "allowTop" given, considers above the board to be free.
-	private boolean isCellFree(Cell c, boolean allowTop) {
+	public boolean isCellFree(Cell c, boolean allowTop) {
 	    if(allowTop && c.row < 0)
 	        return c.col >= 0 && c.col < BOARD_WIDTH; // Only care that its within bounds
 	    else

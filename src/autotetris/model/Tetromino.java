@@ -24,6 +24,13 @@ public class Tetromino {
 		this.orientation = 0;
 	}
 
+    // Construct a tetromino at the specified position + orientation
+    public Tetromino(TetrominoPrototype prototype, Cell position, int orientation) {
+        this.prototype = prototype;
+        this.position = position;
+        this.orientation = orientation % prototype.orientations.length;
+    }
+
 	// Construct from another Tetromino. Cache assumed to be valid
     public Tetromino(Tetromino other) {
 	    this.prototype = other.prototype;
@@ -73,6 +80,14 @@ public class Tetromino {
         cachedProjection = projection;
         cacheValid = true;
 	    return projection;
+    }
+
+    public Cell getPosition() {
+        return position;
+    }
+
+    public int getOrientation() {
+        return orientation;
     }
 
     @Override

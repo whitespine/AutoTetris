@@ -3,6 +3,7 @@ package autotetris.controller;
 import autotetris.model.Model;
 import autotetris.view.Application;
 
+// Thread that reminds the sim to tick every now and then
 public class TetrisTicker extends Thread {
 	private Model model;
 	private Application app;

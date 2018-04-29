@@ -28,6 +28,7 @@ public class Application extends JFrame {
 	private JMenuItem mntmReset;
 	private JMenu mnAiOptions;
 	private JMenuItem mntmTrain;
+	private JMenuItem mntmAIPlay;
 	private JMenuItem mntmPreferences;
 	private AIConfigurator aic;
 	
@@ -37,7 +38,7 @@ public class Application extends JFrame {
 	public Application(Model m) {
 		super("Tetris");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 482, 449);
+		setBounds(100, 100, 252, 449);
 		
 		model = m;
 		Application self = this;
@@ -73,25 +74,32 @@ public class Application extends JFrame {
 		menuBar.add(mnAiOptions);
 		
 		mntmTrain = new JMenuItem("Train");
-		mntmTrain.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				self.disableControls();
-				new ExecutionController(model, self).reset();
-				model.train(self);
-			}
-		});
+		mntmTrain.addActionListener(e -> {
+            self.disableControls();
+            new ExecutionController(model, self).reset();
+            model.train(self);
+        });
 		mnAiOptions.add(mntmTrain);
 		
 		JSeparator separator_1 = new JSeparator();
 		mnAiOptions.add(separator_1);
+
+		mntmAIPlay = new JMenuItem("Play Self");
+		mntmAIPlay.addActionListener(e -> {
+            self.disableControls();
+
+            model.train(self);
+        });
+		mntmAIPlay.add(mntmTrain);
+
+		separator_1 = new JSeparator();
+		mntmAIPlay.add(separator_1);
 		
 		mntmPreferences = new JMenuItem("Preferences...");
-		mntmPreferences.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				new AIConfiguratorController(model, self).fillConfigurator();
-				aic.setVisible(true);
-			}
-		});
+		mntmPreferences.addActionListener(arg0 -> {
+            new AIConfiguratorController(model, self).fillConfigurator();
+            aic.setVisible(true);
+        });
 		mnAiOptions.add(mntmPreferences);
 		
 		contentPane = new JPanel();
@@ -174,7 +182,7 @@ public class Application extends JFrame {
 		lblScore.setText("" + score);
 	}
 
-	public void setExecutionController(ExecutionController ec) {
+	public void bindExecutionController(ExecutionController ec) {
 		mntmPlay.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				ec.play();

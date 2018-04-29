@@ -26,7 +26,7 @@ public class AutoTetris {
 		Model m = new Model();
 		final Application app = new Application(m);
 
-		app.setExecutionController(new autotetris.controller.ExecutionController(m, app));		
+		app.bindExecutionController(new autotetris.controller.ExecutionController(m, app));
 		app.setVisible(true);
 	}
 }
