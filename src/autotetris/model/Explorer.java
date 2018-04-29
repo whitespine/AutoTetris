@@ -1,6 +1,7 @@
 package autotetris.model;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,18 +23,22 @@ public class Explorer {
     // Exploration state
     private HashMap<PotentialState, RouteNode> stateMap; // Represents <State, stepsTaken>. Won't go to a state we've accessed more swiftly
     private LinkedList<PotentialState> frontier;
+    private HashSet<PotentialState> visited;
 
     public Explorer(Model m) {
         this.model = m;
     }
 
-    // EXPENSIVE! Probably
+    // EXPENSIVE! Kinda
     public List<ActionSequence> exploreAllActions() {
         // Create our statemap
         stateMap = new HashMap<>();
 
         // Make the queue.
         frontier = new LinkedList<>();
+
+        // Make visited
+        visited = new HashSet<>();
 
         // Enqueue the current position, and map it to the statemap
         Tetromino fallingPiece = model.getFallingPiece();
@@ -45,7 +50,13 @@ public class Explorer {
         while (!frontier.isEmpty()) {
             // Get our state, and explore it
             PotentialState next = frontier.pop();
-            next.queueExploreAction();
+            if(visited.contains(next)) {
+                continue;
+            }
+            else {
+                visited.add(next);
+                next.queueExploreAction();
+            }
         }
 
         // Check for terminal locations, and build back from them
@@ -104,8 +115,7 @@ public class Explorer {
                 // Otherwise, check if it's even possible.
                 else if (model.allFree(t.project())) {
                     stateMap.put(newState, new RouteNode(stepsToHere + 1, action, this));
-                    if(!frontier.contains(newState))
-                        frontier.push(newState);
+                    frontier.push(newState);
                 }
             }
         }

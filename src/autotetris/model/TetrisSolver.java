@@ -3,7 +3,6 @@ package autotetris.model;
 import autotetris.view.Application;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class TetrisSolver {
 	public double totalHeightWeight, completeLinesWeight, holesWeight, heightVarianceWeight;
@@ -73,8 +72,6 @@ public class TetrisSolver {
                 // finalize with a down
                 targetModel.doAction(Action.Down);
                 targetApp.repaint();
-
-
             }
         }
     }
