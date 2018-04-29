@@ -178,8 +178,16 @@ public class Application extends JFrame {
 		aic.setVisible(false);
 	}
 
-	public void showScore(int score) {
-		lblScore.setText("" + score);
+	@Override
+	public void repaint(long time, int x, int y, int width, int height) {
+        lblScore.setText("" + model.getScore());
+		super.repaint(time, x, y, width, height);
+	}
+
+	@Override
+	public void repaint() {
+        lblScore.setText("" + model.getScore());
+		super.repaint();
 	}
 
 	public void bindExecutionController(ExecutionController ec) {

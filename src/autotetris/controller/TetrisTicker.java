@@ -40,7 +40,6 @@ public class TetrisTicker extends Thread {
 				int sleepTime = 10;
 				if (!paused) {
 					model.tick();
-					app.showScore(model.getScore());
 					app.repaint();
 					if(model.isGameOver())
 					    break;
