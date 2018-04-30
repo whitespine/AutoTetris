@@ -3,6 +3,7 @@ package autotetris.model;
 import autotetris.view.Application;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.IntStream;
@@ -22,22 +23,55 @@ public class TetrisSolver {
         actionDelay = 1;
 	}
 
-	public static TetrisSolver genRandomSolver() {
+	public TetrisSolver(TetrisSolver copyTarg) {
+	    this.totalHeightWeight = copyTarg.totalHeightWeight;
+	    this.completeLinesWeight = copyTarg.completeLinesWeight;
+	    this.holesWeight = copyTarg.holesWeight;
+	    this.heightStdevWeight = copyTarg.heightStdevWeight;
+	    this.squaredMaxHeightWeight = copyTarg.squaredMaxHeightWeight;
+	    this.actionDelay = copyTarg.actionDelay;
+    }
+
+	public static TetrisSolver genRandomSolver(boolean expWeights) {
+	    // If expWeights, random weights will be 2**<random> instead of just <random>.
+        // Can help make certain characteristics stand out, but risks missing fine tuning. (probably) good for initial generation!
         TetrisSolver solver = new TetrisSolver();
-        solver.totalHeightWeight = -genRandomWeight();
-        solver.completeLinesWeight = genRandomWeight();
-        solver.holesWeight = -genRandomWeight();
-        solver.heightStdevWeight = -genRandomWeight();
-        solver.squaredMaxHeightWeight = -genRandomWeight();
+        solver.totalHeightWeight = -genRandomWeight(expWeights);
+        solver.completeLinesWeight = genRandomWeight(expWeights);
+        solver.holesWeight = -genRandomWeight(expWeights);
+        solver.heightStdevWeight = -genRandomWeight(expWeights);
+        solver.squaredMaxHeightWeight = -genRandomWeight(expWeights);
         solver.unitVectorize();
         return solver;
     }
 
+    public static TetrisSolver crossBreed(TetrisSolver a, TetrisSolver b) {
+	    // Copy a and b so we can safely unitvectorize
+        a = new TetrisSolver(a);
+        b = new TetrisSolver(b);
+        a.unitVectorize();
+        b.unitVectorize();
+
+        // Create a combination of them
+	    TetrisSolver t = new TetrisSolver();
+        t.totalHeightWeight = a.totalHeightWeight + b.totalHeightWeight;
+        t.completeLinesWeight = a.completeLinesWeight + b.completeLinesWeight;
+        t.holesWeight = a.holesWeight + b.holesWeight;
+	    t.heightStdevWeight = a.heightStdevWeight + b.heightStdevWeight;
+        t.squaredMaxHeightWeight = a.squaredMaxHeightWeight + b.squaredMaxHeightWeight;
+
+        t.unitVectorize();
+        return t;
+    }
+
     private static Random rng = new Random();
-    private static double genRandomWeight() {
+    private static double genRandomWeight(boolean expWeights) {
         double base = 2;
         double maxExponent = 20;
-        return Math.pow(base, rng.nextDouble() * maxExponent);
+        if(expWeights)
+            return Math.pow(base, rng.nextDouble() * maxExponent);
+        else
+            return rng.nextDouble();
     }
 
 	private double score(Evaluation ev) {
@@ -63,28 +97,13 @@ public class TetrisSolver {
         squaredMaxHeightWeight /= s;
     }
 
+    private Actor a = null;
 	public void execute(Application parent, Model target) {
-		Actor a = new Actor(parent, target, actionDelay);
+	    if(a != null && a.isAlive())
+	        return;
+		a = new Actor(parent, target, true);
 		a.start();
 	}
-
-	// Executes the game on numTrials times, and returns an array of the scores
-	public int[] countDroppedMany(int numTrials) {
-        return IntStream.range(0, numTrials)
-                .parallel()
-                .map(whocares -> {
-                    Model m = new Model();
-                    Actor a = new Actor(null, m, 0);
-                    a.start();
-                    try {
-                        a.join();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    return a.targetModel.getTotalDrops();
-                })
-                .toArray();
-    }
 
     // Executes a game till completion
     // If targetApp is supplied, will repaint after each action on model
@@ -93,9 +112,9 @@ public class TetrisSolver {
 	    boolean done = false;
         private Application targetApp;
         Model targetModel;
-        private int delay;
+        private boolean delay;
 
-        public Actor(Application targetApp, Model targetModel, int delay) {
+        public Actor(Application targetApp, Model targetModel, boolean delay) {
             this.targetApp = targetApp;
             this.targetModel = targetModel;
             this.delay = delay;
@@ -139,8 +158,8 @@ public class TetrisSolver {
                         if (targetApp != null)
                             targetApp.repaint();
                         try {
-                            if (delay > 0)
-                                sleep(delay);
+                            if (delay)
+                                sleep(actionDelay);
                         } catch (InterruptedException e) {
                             System.out.println("Interrupted in tetrissolver for some reason");
                         }
@@ -172,5 +191,58 @@ public class TetrisSolver {
                 ";\n\theightStdevWeight     = " + df.format(heightStdevWeight) +
                 ";\n\tsquaredMaxHeightWeight= " + df.format(squaredMaxHeightWeight) +
                 ";\n}";
+    }
+
+    public SolverScore scoreSelf(int numTrials) {
+        // Run self numTrials times
+        ArrayList<Integer> drops = new ArrayList<>();
+        ArrayList<Integer> scores = new ArrayList<>();
+        IntStream.range(0, numTrials)
+        .parallel()
+        .mapToObj(whocares -> {
+            Model m = new Model();
+            Actor a = new Actor(null, m, false);
+            a.start();
+            try {
+                a.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            return m;
+        }).forEach(m -> {
+            drops.add(m.getTotalDrops());
+            scores.add(m.getScore());
+        });
+
+        // Do some calculations
+        SolverScore s = new SolverScore();
+        long sumDrops = 0;
+        long sumScores = 0;
+        for(int x : drops)
+            sumDrops += x;
+        for(int x : scores)
+            sumScores += x;
+        s.meanDrops = (double)sumDrops  / drops.size();
+        s.meanScore = (double)sumScores / scores.size();
+
+        double varDrops = 0;
+        double varScore = 0;
+        for(double x : drops)
+            varDrops += Math.pow(x - s.meanDrops, 2);
+        for(double x : scores)
+            varScore += Math.pow(x - s.meanScore, 2);
+        s.devDrops = Math.sqrt(varDrops / (drops.size()-1));
+        s.devScore = Math.sqrt(varScore / (scores.size()-1));
+
+        s.numTrials = numTrials;
+        return s;
+    }
+
+    public static class SolverScore {
+        public int numTrials;
+        public double meanDrops; // Average # pieces dropped across trials
+        public double meanScore; // Average score across trials
+        public double devDrops; // Std deviation of # pieces dropped across trials
+        public double devScore; // Std deviation of score dropped across trials
     }
 }
