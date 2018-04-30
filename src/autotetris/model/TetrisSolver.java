@@ -11,7 +11,6 @@ import java.util.stream.IntStream;
 public class TetrisSolver {
 	public double totalHeightWeight, completeLinesWeight, holesWeight, heightStdevWeight, squaredMaxHeightWeight;
 	public int actionDelay;
-	Actor a;
 
 	public TetrisSolver() {
 	    // Higher = better
@@ -117,7 +116,7 @@ public class TetrisSolver {
                 .parallel()
                 .map(whocares -> {
                     Model m = new Model();
-                    Actor a = new Actor(null, m, 0);
+                    Actor a = new Actor(null, m, false);
                     a.start();
                     try {
                         a.join();
