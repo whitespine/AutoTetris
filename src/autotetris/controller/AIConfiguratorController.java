@@ -16,9 +16,9 @@ public class AIConfiguratorController {
 	public void fillConfigurator() {
 		//app.getAIConfigurator().getIterSpinner().setValue(model.getTrainingIterations());
         AIConfigurator config = app.getAIConfigurator();
-        config.getTotalHeight_wtfield().setText("" + app.getSolver().squaredHeightWeight);
+        config.getTotalHeight_wtfield().setText("" + app.getSolver().totalHeightWeight);
         config.getRows_wtfield().setText("" + app.getSolver().completeLinesWeight);
-		config.getMaxheight_wtfield().setText("" + app.getSolver().maxHeightWeight);
+		config.getMaxheight_wtfield().setText("" + app.getSolver().squaredMaxHeightWeight);
         config.getHoles_wtfield().setText("" + app.getSolver().holesWeight);
         config.getHeightDev_wtfield().setText("" + app.getSolver().heightStdevWeight);
 	}
@@ -42,8 +42,8 @@ public class AIConfiguratorController {
         solver.completeLinesWeight = completeLines_wt;
         solver.heightStdevWeight = heightVariation_wt;
         solver.holesWeight = holes_wt;
-        solver.squaredHeightWeight = totalHeight_wt;
-        solver.maxHeightWeight = maxHeight_wt;
+        solver.totalHeightWeight = totalHeight_wt;
+        solver.squaredMaxHeightWeight = maxHeight_wt;
 		return true;
 	}
 }

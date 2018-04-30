@@ -27,7 +27,7 @@ public class TetrisTrainer {
 			m.getSolver().completeLinesWeight = weights[0];
 			m.getSolver().heightStdevWeight = weights[1];
 			m.getSolver().holesWeight = weights[2];
-			m.getSolver().squaredHeightWeight = weights[3];
+			m.getSolver().totalHeightWeight = weights[3];
 			games.add(m);
 		}
 		

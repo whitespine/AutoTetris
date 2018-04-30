@@ -2,31 +2,35 @@ package autotetris.model;
 
 import autotetris.view.Application;
 
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.IntStream;
 
 public class TetrisSolver {
-	public double squaredHeightWeight, completeLinesWeight, holesWeight, heightStdevWeight, maxHeightWeight;
+	public double totalHeightWeight, completeLinesWeight, holesWeight, heightStdevWeight, squaredMaxHeightWeight;
+	public int actionDelay;
 
 	public TetrisSolver() {
 	    // Higher = better
-		squaredHeightWeight = -(1<<3);
-		completeLinesWeight = (1<<3);
-		holesWeight = -(1<<2);
-		heightStdevWeight = -(1<<1);
-		maxHeightWeight = -10; // Applied to square
-
+        // The below parameters had an average survival of ~37300 pieces
+		totalHeightWeight       = -0.0000337604;
+		completeLinesWeight     = +0.0189894317;
+		holesWeight             = -0.9972973465;
+		heightStdevWeight       = -0.0709744758;
+		squaredMaxHeightWeight  = -0.0001637646;
+        actionDelay = 20;
 	}
 
 	public static TetrisSolver genRandomSolver() {
         TetrisSolver solver = new TetrisSolver();
-        solver.squaredHeightWeight = -genRandomWeight();
+        solver.totalHeightWeight = -genRandomWeight();
         solver.completeLinesWeight = genRandomWeight();
         solver.holesWeight = -genRandomWeight();
         solver.heightStdevWeight = -genRandomWeight();
-        solver.maxHeightWeight = -genRandomWeight();
-        return  solver;
+        solver.squaredMaxHeightWeight = -genRandomWeight();
+        solver.unitVectorize();
+        return solver;
     }
 
     private static Random rng = new Random();
@@ -37,16 +41,30 @@ public class TetrisSolver {
     }
 
 	private double score(Evaluation ev) {
-		return squaredHeightWeight * ev.getTotalHeight()
+		return totalHeightWeight * ev.getTotalHeight()
 				+ completeLinesWeight * ev.getCompleteLines()
 				+ holesWeight * ev.getHoles()
 				+ heightStdevWeight * Math.sqrt(ev.getHeightVariance())
-                + maxHeightWeight * ev.getMaxHeight() * ev.getMaxHeight();
+                + squaredMaxHeightWeight * ev.getMaxHeight() * ev.getMaxHeight();
 	}
 
+	private void unitVectorize() {
+        double s = 0;
+        s += totalHeightWeight * totalHeightWeight;
+        s += completeLinesWeight * completeLinesWeight;
+        s += holesWeight * holesWeight;
+        s += heightStdevWeight * heightStdevWeight;
+        s += squaredMaxHeightWeight * squaredMaxHeightWeight;
+        s = Math.sqrt(s);
+        totalHeightWeight /= s;
+        completeLinesWeight /= s;
+        holesWeight /= s;
+        heightStdevWeight /= s;
+        squaredMaxHeightWeight /= s;
+    }
 
 	public void execute(Application parent, Model target) {
-		Actor a = new Actor(parent, target, 5);
+		Actor a = new Actor(parent, target, actionDelay);
 		a.start();
 	}
 
@@ -81,6 +99,8 @@ public class TetrisSolver {
             this.targetApp = targetApp;
             this.targetModel = targetModel;
             this.delay = delay;
+
+            this.setDaemon(true);
         }
 
         @Override
@@ -119,6 +139,7 @@ public class TetrisSolver {
                         System.out.println("Interrupted in tetrissolver for some reason");
                     }
                 }
+
                 // finalize with a down
                 targetModel.doAction(Action.Down);
                 if(targetApp != null)
@@ -129,5 +150,20 @@ public class TetrisSolver {
                     done = true;
             }
         }
+    }
+
+    @Override
+    public String toString() {
+        DecimalFormat df = new DecimalFormat();
+        df.setMinimumFractionDigits(10);
+        df.setPositivePrefix("+");
+        df.setMaximumFractionDigits(10);
+        return "TetrisSolver{" +
+                "\n\ttotalHeightWeight      = " + df.format(totalHeightWeight) +
+                ",\n\tcompleteLinesWeight   = " + df.format(completeLinesWeight) +
+                ",\n\tholesWeight           = " + df.format(holesWeight) +
+                ",\n\theightStdevWeight     = " + df.format(heightStdevWeight) +
+                ",\n\tsquaredMaxHeightWeight= " + df.format(squaredMaxHeightWeight) +
+                '}';
     }
 }

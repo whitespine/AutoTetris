@@ -1,6 +1,7 @@
 package autotetris.model;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Model {
     public static final int BOARD_WIDTH = 10, BOARD_HEIGHT = 22;
@@ -161,17 +162,20 @@ public class Model {
     //////////////////////////////////// GAME LOGIC /////////////////////////////////////////////////////
     // Tries to clear all rows, if possible.
     private void tryClear() {
-        // Clear rows
         int clearCount = 0;
-        for(int r=0; r < BOARD_HEIGHT; r++) {
-            if (isRowFilled(r)) {
-                clearRow(r);
-                rowScore++;
 
-                // Do the same r again
-                r--;
+        // Map indices
+        int cursor = BOARD_HEIGHT-1;
+        for(int row=BOARD_HEIGHT-1; row >= 0; row--, cursor--) {
+            while (isRowFilled(cursor)) {
+                cursor--;
+                rowScore++;
             }
+            if(cursor != row)
+                copyRow(cursor, row);
         }
+
+        // Perform rewrite
         rowScore += (clearCount * (clearCount+1)); // Quadratic for more rewarding big clears
     }
 
@@ -193,13 +197,18 @@ public class Model {
         tryClear();
 
         // We're done with this faller - get a new one
-        dropNewPiece();
+        if(!gameOver)
+            dropNewPiece();
     }
 
     private void dropNewPiece() {
         fallingPiece = new Tetromino(pieceGen.getNext(), new Cell(0, BOARD_WIDTH / 2));
         piecesDropped += 1;
         lastDown = System.currentTimeMillis();
+
+        if(piecesDropped % 10000 == 0) {
+            System.out.print("_" + piecesDropped / 10000);
+        }
     }
 
 
@@ -275,7 +284,10 @@ public class Model {
     }
 
     // Gives true if te given row (from base) is filled
+    // Gives false if its an invalid row
     private boolean isRowFilled(int row) {
+	    if(row < 0 || row >= BOARD_HEIGHT)
+	        return false;
         for(int col = 0; col < BOARD_WIDTH; col++) {
             if (!board[row][col])
                 return false;
@@ -284,16 +296,11 @@ public class Model {
     }
 
     // Wipes the specified row, and moves all rows above, down
-    private void clearRow(int row) {
-        // Do all except topmost row
-	    for(; row > 0; row--) {
-            for (int col = 0; col < BOARD_WIDTH; col++) {
-                if (row == 0)
-                    board[row][col] = false;
-                else
-                    board[row][col] = board[row - 1][col];
-            }
-        }
+    private void copyRow(int from, int to) {
+	    if(from < 0)
+            Arrays.fill(board[to], false);
+	    else
+            System.arraycopy(board[from], 0, board[to], 0, BOARD_WIDTH);
     }
 
     // Returns true if a cell is in the board, and open.
