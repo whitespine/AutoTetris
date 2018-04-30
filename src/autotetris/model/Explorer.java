@@ -1,34 +1,31 @@
 package autotetris.model;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 // Handles exploration.
 // Note: Gets pretty messy with what calls what. Be careful!
 public class Explorer {
     // Order in which to consider actions
-    /*private static final Action[] ACTION_PRIORITY = {
+    private static final Action[] ACTION_PRIORITY = {
             Action.Spin,
             Action.Left,
             Action.Right,
             Action.Down
-    };*/
-    private static final Action[] ACTION_PRIORITY = {
+    };
+   /* private static final Action[] ACTION_PRIORITY = {
             Action.Down,
             Action.Right,
             Action.Left,
             Action.Spin,
-    };
+    };*/
 
     // The model to analyze
     private Model model;
 
     // Exploration state
     private HashMap<PotentialState, RouteNode> stateMap; // Represents <State, stepsTaken>. Won't go to a state we've accessed more swiftly
-    private LinkedList<PotentialState> frontier;
+    private Queue<PotentialState> frontier;
     private HashSet<PotentialState> visited;
 
     public Explorer(Model m) {
@@ -41,6 +38,7 @@ public class Explorer {
         stateMap = new HashMap<>();
 
         // Make the queue.
+        //frontier = new PriorityQueue<>();
         frontier = new LinkedList<>();
 
         // Make visited
@@ -50,12 +48,12 @@ public class Explorer {
         Tetromino fallingPiece = model.getFallingPiece();
         PotentialState currPos = new PotentialState(fallingPiece.getPosition(), fallingPiece.getOrientation());
         stateMap.put(currPos, new RouteNode(0, null, null));
-        frontier.push(currPos);
+        frontier.add(currPos);
 
         // Until frontier exhausted, enqueue potential
         while (!frontier.isEmpty()) {
             // Get our state, and explore it
-            PotentialState next = frontier.pop();
+            PotentialState next = frontier.remove();
             if(visited.contains(next)) {
                 continue;
             }
@@ -119,7 +117,7 @@ public class Explorer {
                 // Otherwise, check if it's even possible.
                 else if (model.allFree(t.project())) {
                     stateMap.put(newState, new RouteNode(stepsToHere + 1, action, this));
-                    frontier.push(newState);
+                    frontier.add(newState);
                 }
             }
         }
@@ -164,7 +162,7 @@ public class Explorer {
         }
     }
 
-    private class RouteNode {
+    private class RouteNode implements Comparable<RouteNode>{
         int stepsToArrive;
         Action actionToArrive;
         PotentialState from;
@@ -173,6 +171,12 @@ public class Explorer {
             this.stepsToArrive = stepsToArrive;
             this.actionToArrive = actionToArrive;
             this.from = from;
+        }
+
+        @Override
+        public int compareTo(RouteNode o) {
+            //int x = stateMap.getOrDefault(this, -1);
+            return Integer.compare(stepsToArrive, o.stepsToArrive);
         }
     }
 
