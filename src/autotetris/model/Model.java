@@ -65,7 +65,7 @@ public class Model {
 	}
 	
 	public int getScore() {
-		return rowScore * BOARD_WIDTH + ((piecesDropped - 1) / 2);
+		return rowScore * 100;
 	}
 
 	public int getTotalDrops() {
@@ -169,14 +169,14 @@ public class Model {
         for(int row=BOARD_HEIGHT-1; row >= 0; row--, cursor--) {
             while (isRowFilled(cursor)) {
                 cursor--;
-                rowScore++;
+                clearCount++;
             }
             if(cursor != row)
                 copyRow(cursor, row);
         }
 
         // Perform rewrite
-        rowScore += (clearCount * (clearCount+1)); // Quadratic for more rewarding big clears
+        rowScore += (clearCount * clearCount); // Quadratic for more rewarding big clears
     }
 
 

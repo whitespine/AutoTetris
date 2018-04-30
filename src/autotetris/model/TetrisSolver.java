@@ -13,13 +13,13 @@ public class TetrisSolver {
 
 	public TetrisSolver() {
 	    // Higher = better
-        // The below parameters had an average survival of ~37300 pieces
-		totalHeightWeight       = -0.0000337604;
-		completeLinesWeight     = +0.0189894317;
-		holesWeight             = -0.9972973465;
-		heightStdevWeight       = -0.0709744758;
-		squaredMaxHeightWeight  = -0.0001637646;
-        actionDelay = 20;
+        // The below parameters had an average survival of ~50200 pieces
+		totalHeightWeight       = -0.0000601438;
+		completeLinesWeight     = +0.0002838841;
+		holesWeight             = -0.9994895805;
+		heightStdevWeight       = -0.0319446812;
+		squaredMaxHeightWeight  = -0.0001776817;
+        actionDelay = 1;
 	}
 
 	public static TetrisSolver genRandomSolver() {
@@ -118,6 +118,10 @@ public class TetrisSolver {
                     // Get the model
                     Model m = sequences.get(i).rolloutModel(targetModel);
 
+                    // If it lost, discard
+                    if(m.isGameOver())
+                        continue;
+
                     // Evaluate and compare
                     Evaluation eval = new Evaluation(m.board);
                     double evalScore = score(eval);
@@ -127,16 +131,19 @@ public class TetrisSolver {
                     }
                 }
 
-                // Now that we have best sequence, play it out super fast
-                for(Action a : bestSequence.actions) {
-                    targetModel.doAction(a);
-                    if(targetApp != null)
-                        targetApp.repaint();
-                    try {
-                        if(delay > 0)
-                            sleep(delay);
-                    } catch (InterruptedException e) {
-                        System.out.println("Interrupted in tetrissolver for some reason");
+                // If bestSequence still null, we can't do anything (doomed state).
+                if(bestSequence != null){
+                    // Now that we have best sequence, play it out super fast
+                    for (Action a : bestSequence.actions) {
+                        targetModel.doAction(a);
+                        if (targetApp != null)
+                            targetApp.repaint();
+                        try {
+                            if (delay > 0)
+                                sleep(delay);
+                        } catch (InterruptedException e) {
+                            System.out.println("Interrupted in tetrissolver for some reason");
+                        }
                     }
                 }
 
@@ -160,10 +167,10 @@ public class TetrisSolver {
         df.setMaximumFractionDigits(10);
         return "TetrisSolver{" +
                 "\n\ttotalHeightWeight      = " + df.format(totalHeightWeight) +
-                ",\n\tcompleteLinesWeight   = " + df.format(completeLinesWeight) +
-                ",\n\tholesWeight           = " + df.format(holesWeight) +
-                ",\n\theightStdevWeight     = " + df.format(heightStdevWeight) +
-                ",\n\tsquaredMaxHeightWeight= " + df.format(squaredMaxHeightWeight) +
-                '}';
+                ";\n\tcompleteLinesWeight   = " + df.format(completeLinesWeight) +
+                ";\n\tholesWeight           = " + df.format(holesWeight) +
+                ";\n\theightStdevWeight     = " + df.format(heightStdevWeight) +
+                ";\n\tsquaredMaxHeightWeight= " + df.format(squaredMaxHeightWeight) +
+                ";\n}";
     }
 }
