@@ -10,11 +10,17 @@ import java.util.stream.Collectors;
 // Note: Gets pretty messy with what calls what. Be careful!
 public class Explorer {
     // Order in which to consider actions
-    private static final Action[] ACTION_PRIORITY = {
+    /*private static final Action[] ACTION_PRIORITY = {
             Action.Spin,
             Action.Left,
             Action.Right,
             Action.Down
+    };*/
+    private static final Action[] ACTION_PRIORITY = {
+            Action.Down,
+            Action.Right,
+            Action.Left,
+            Action.Spin,
     };
 
     // The model to analyze
