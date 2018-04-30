@@ -81,8 +81,6 @@ public class Explorer {
         void queueExploreAction() {
             int stepsToHere = stateMap.get(this).stepsToArrive;
             for (Action action : ACTION_PRIORITY) {
-                if(action == Action.Drop) continue;
-
                 // Create the tetromino, and perform action on it
                 Tetromino t = asTetromino();
                 switch (action) {

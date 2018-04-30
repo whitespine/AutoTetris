@@ -4,21 +4,16 @@ package autotetris.view;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
-import java.awt.GridBagLayout;
+import java.awt.*;
 import javax.swing.border.TitledBorder;
 
 import autotetris.controller.AIConfiguratorController;
 
 import javax.swing.JLabel;
-import java.awt.GridBagConstraints;
-import java.awt.Insets;
-import java.awt.FlowLayout;
 import javax.swing.JButton;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.JTextField;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
 
 public class AIConfigurator extends JFrame {
 
@@ -28,14 +23,15 @@ public class AIConfigurator extends JFrame {
 	private JTextField totalHeight_wtfield;
 	private JTextField rows_wtfield;
 	private JTextField holes_wtfield;
-	private JTextField heightvar_wtfield;
+	private JTextField heightDev_wtfield;
+	private JTextField maxHeight_wtfield;
 	Application parent;
 	
 	public AIConfigurator(Application application) {
 		this.parent = application;
 		setTitle("Options");
 		setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-		setBounds(100, 100, 450, 300);
+		setBounds(100, 100, 450, 400);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
@@ -45,28 +41,29 @@ public class AIConfigurator extends JFrame {
 		gbl_contentPane.columnWeights = new double[]{1.0, Double.MIN_VALUE};
 		gbl_contentPane.rowWeights = new double[]{1.0, 1.0, 0.0, Double.MIN_VALUE};
 		contentPane.setLayout(gbl_contentPane);
+
 		
-		JPanel panel = new JPanel();
-		panel.setBorder(new TitledBorder(null, "Training Options", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		JPanel topPanel = new JPanel();
+		topPanel.setBorder(new TitledBorder(null, "Training Options", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		GridBagConstraints gbc_panel = new GridBagConstraints();
 		gbc_panel.fill = GridBagConstraints.BOTH;
 		gbc_panel.insets = new Insets(0, 0, 5, 0);
 		gbc_panel.gridx = 0;
 		gbc_panel.gridy = 0;
-		contentPane.add(panel, gbc_panel);
+		contentPane.add(topPanel, gbc_panel);
 		GridBagLayout gbl_panel = new GridBagLayout();
 		gbl_panel.columnWidths = new int[]{0, 0, 0};
 		gbl_panel.rowHeights = new int[]{0, 0};
 		gbl_panel.columnWeights = new double[]{0.0, 1.0, Double.MIN_VALUE};
 		gbl_panel.rowWeights = new double[]{0.0, Double.MIN_VALUE};
-		panel.setLayout(gbl_panel);
+		topPanel.setLayout(gbl_panel);
 		
 		JLabel lblIterations_Name = new JLabel("Iterations:");
 		GridBagConstraints gbc_lblIterations_Name = new GridBagConstraints();
 		gbc_lblIterations_Name.insets = new Insets(0, 0, 0, 5);
 		gbc_lblIterations_Name.gridx = 0;
 		gbc_lblIterations_Name.gridy = 0;
-		panel.add(lblIterations_Name, gbc_lblIterations_Name);
+		topPanel.add(lblIterations_Name, gbc_lblIterations_Name);
 		
 		iterSpinner = new JSpinner();
 		iterSpinner.setModel(new SpinnerNumberModel(0, 0, 1000, 10));
@@ -74,118 +71,97 @@ public class AIConfigurator extends JFrame {
 		gbc_iterSpinner.fill = GridBagConstraints.HORIZONTAL;
 		gbc_iterSpinner.gridx = 1;
 		gbc_iterSpinner.gridy = 0;
-		panel.add(iterSpinner, gbc_iterSpinner);
+		topPanel.add(iterSpinner, gbc_iterSpinner);
 		
-		JPanel panel_1 = new JPanel();
-		panel_1.setBorder(new TitledBorder(null, "Evaluation Weights", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		JPanel weightsPanel = new JPanel();
+		weightsPanel.setBorder(new TitledBorder(null, "Evaluation Weights", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		GridBagConstraints gbc_panel_1 = new GridBagConstraints();
 		gbc_panel_1.insets = new Insets(0, 0, 5, 0);
 		gbc_panel_1.fill = GridBagConstraints.BOTH;
 		gbc_panel_1.gridx = 0;
 		gbc_panel_1.gridy = 1;
-		contentPane.add(panel_1, gbc_panel_1);
-		GridBagLayout gbl_panel_1 = new GridBagLayout();
-		gbl_panel_1.columnWidths = new int[]{0, 0, 0};
-		gbl_panel_1.rowHeights = new int[]{0, 0, 0, 0, 0};
-		gbl_panel_1.columnWeights = new double[]{0.0, 1.0, Double.MIN_VALUE};
-		gbl_panel_1.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
-		panel_1.setLayout(gbl_panel_1);
-		
+		contentPane.add(weightsPanel, gbc_panel_1);
+		weightsPanel.setLayout(new GridLayout(0,2));
+
+		//////////////////////////////////////////////////////////////
+
 		JLabel lblTotalHeight = new JLabel("Total Height:");
-		GridBagConstraints gbc_lblTotalHeight = new GridBagConstraints();
-		gbc_lblTotalHeight.anchor = GridBagConstraints.EAST;
-		gbc_lblTotalHeight.insets = new Insets(0, 0, 5, 5);
-		gbc_lblTotalHeight.gridx = 0;
-		gbc_lblTotalHeight.gridy = 0;
-		panel_1.add(lblTotalHeight, gbc_lblTotalHeight);
-		
+		weightsPanel.add(lblTotalHeight);
+
 		totalHeight_wtfield = new JTextField();
-		GridBagConstraints gbc_totalHeight_wtfield = new GridBagConstraints();
-		gbc_totalHeight_wtfield.insets = new Insets(0, 0, 5, 0);
-		gbc_totalHeight_wtfield.fill = GridBagConstraints.HORIZONTAL;
-		gbc_totalHeight_wtfield.gridx = 1;
-		gbc_totalHeight_wtfield.gridy = 0;
-		panel_1.add(totalHeight_wtfield, gbc_totalHeight_wtfield);
-		totalHeight_wtfield.setColumns(10);
+		weightsPanel.add(totalHeight_wtfield);
+
+		//////////////////////////////////////////////////////////////
 		
 		JLabel lblCompleteRows = new JLabel("Complete Rows:");
-		GridBagConstraints gbc_lblCompleteRows = new GridBagConstraints();
-		gbc_lblCompleteRows.anchor = GridBagConstraints.EAST;
-		gbc_lblCompleteRows.insets = new Insets(0, 0, 5, 5);
-		gbc_lblCompleteRows.gridx = 0;
-		gbc_lblCompleteRows.gridy = 1;
-		panel_1.add(lblCompleteRows, gbc_lblCompleteRows);
+		weightsPanel.add(lblCompleteRows);
 		
 		rows_wtfield = new JTextField();
-		GridBagConstraints gbc_rows_wtfield = new GridBagConstraints();
-		gbc_rows_wtfield.insets = new Insets(0, 0, 5, 0);
-		gbc_rows_wtfield.fill = GridBagConstraints.HORIZONTAL;
-		gbc_rows_wtfield.gridx = 1;
-		gbc_rows_wtfield.gridy = 1;
-		panel_1.add(rows_wtfield, gbc_rows_wtfield);
-		rows_wtfield.setColumns(10);
+		weightsPanel.add(rows_wtfield);
+
+		//////////////////////////////////////////////////////////////
 		
 		JLabel lblHoles = new JLabel("Holes:");
-		GridBagConstraints gbc_lblHoles = new GridBagConstraints();
-		gbc_lblHoles.anchor = GridBagConstraints.EAST;
-		gbc_lblHoles.insets = new Insets(0, 0, 5, 5);
-		gbc_lblHoles.gridx = 0;
-		gbc_lblHoles.gridy = 2;
-		panel_1.add(lblHoles, gbc_lblHoles);
+		weightsPanel.add(lblHoles);
 		
 		holes_wtfield = new JTextField();
-		GridBagConstraints gbc_holes_wtfield = new GridBagConstraints();
-		gbc_holes_wtfield.insets = new Insets(0, 0, 5, 0);
-		gbc_holes_wtfield.fill = GridBagConstraints.HORIZONTAL;
-		gbc_holes_wtfield.gridx = 1;
-		gbc_holes_wtfield.gridy = 2;
-		panel_1.add(holes_wtfield, gbc_holes_wtfield);
-		holes_wtfield.setColumns(10);
-		
-		JLabel lblHeightVariance = new JLabel("Height Variance:");
-		GridBagConstraints gbc_lblHeightVariance = new GridBagConstraints();
-		gbc_lblHeightVariance.anchor = GridBagConstraints.EAST;
-		gbc_lblHeightVariance.insets = new Insets(0, 0, 0, 5);
-		gbc_lblHeightVariance.gridx = 0;
-		gbc_lblHeightVariance.gridy = 3;
-		panel_1.add(lblHeightVariance, gbc_lblHeightVariance);
-		
-		heightvar_wtfield = new JTextField();
-		GridBagConstraints gbc_heightvar_wtfield = new GridBagConstraints();
-		gbc_heightvar_wtfield.fill = GridBagConstraints.HORIZONTAL;
-		gbc_heightvar_wtfield.gridx = 1;
-		gbc_heightvar_wtfield.gridy = 3;
-		panel_1.add(heightvar_wtfield, gbc_heightvar_wtfield);
-		heightvar_wtfield.setColumns(10);
-		
-		JPanel panel_2 = new JPanel();
+		weightsPanel.add(holes_wtfield);
+
+		//////////////////////////////////////////////////////////////
+
+		JLabel lblHeightVariance = new JLabel("Height Variance (Squared):");
+		weightsPanel.add(lblHeightVariance);
+
+		heightDev_wtfield = new JTextField();
+		weightsPanel.add(heightDev_wtfield);
+
+		//////////////////////////////////////////////////////////////
+
+		JLabel lblMaxHeight = new JLabel("Max Height (squared)");
+		weightsPanel.add(lblMaxHeight);
+
+		maxHeight_wtfield = new JTextField();
+		weightsPanel.add(maxHeight_wtfield);
+
+		//////////////////////////////////////////////////////////////
+
+		JPanel buttonPanel = new JPanel();
 		GridBagConstraints gbc_panel_2 = new GridBagConstraints();
 		gbc_panel_2.fill = GridBagConstraints.BOTH;
 		gbc_panel_2.gridx = 0;
 		gbc_panel_2.gridy = 2;
-		contentPane.add(panel_2, gbc_panel_2);
-		panel_2.setLayout(new FlowLayout(FlowLayout.RIGHT, 5, 5));
+		contentPane.add(buttonPanel, gbc_panel_2);
+		buttonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT, 5, 5));
 		
 		JButton btnOk = new JButton("OK");
 		btnOk.addActionListener(e -> {
-            if (new AIConfiguratorController(parent).writeConfiguration(iterSpinner.getValue(),
-                    totalHeight_wtfield.getText(), rows_wtfield.getText(), holes_wtfield.getText(), heightvar_wtfield.getText()))
+            if (new AIConfiguratorController(parent).writeConfiguration(
+                    iterSpinner.getValue(),
+                    totalHeight_wtfield.getText(),
+                    rows_wtfield.getText(),
+                    holes_wtfield.getText(),
+                    heightDev_wtfield.getText(),
+                    maxHeight_wtfield.getText()))
                 parent.getAIConfigurator().setVisible(false);
         });
-		panel_2.add(btnOk);
+		buttonPanel.add(btnOk);
 		
 		JButton btnCancel = new JButton("Cancel");
 		btnCancel.addActionListener(e -> parent.getAIConfigurator().setVisible(false));
-		panel_2.add(btnCancel);
+		buttonPanel.add(btnCancel);
 		
 		JButton btnApply = new JButton("Apply");
 		btnApply.addActionListener(e -> {
             AIConfiguratorController aicc = new AIConfiguratorController(parent);
             aicc.writeConfiguration(iterSpinner.getValue(),
-                    totalHeight_wtfield.getText(), rows_wtfield.getText(), holes_wtfield.getText(), heightvar_wtfield.getText());
+                    totalHeight_wtfield.getText(),
+                    rows_wtfield.getText(),
+                    holes_wtfield.getText(),
+                    heightDev_wtfield.getText(),
+                    maxHeight_wtfield.getText());
             aicc.fillConfigurator();
         });
-		panel_2.add(btnApply);
+		buttonPanel.add(btnApply);
 	}
 
 	public JSpinner getIterSpinner() {
@@ -200,11 +176,15 @@ public class AIConfigurator extends JFrame {
 		return rows_wtfield;
 	}
 
+	public JTextField getMaxheight_wtfield() {
+		return maxHeight_wtfield;
+	}
+
 	public JTextField getHoles_wtfield() {
 		return holes_wtfield;
 	}
 
-	public JTextField getHeightvar_wtfield() {
-		return heightvar_wtfield;
+	public JTextField getHeightDev_wtfield() {
+		return heightDev_wtfield;
 	}
 }

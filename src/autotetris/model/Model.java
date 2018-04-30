@@ -66,7 +66,11 @@ public class Model {
 	public int getScore() {
 		return rowScore * BOARD_WIDTH + ((piecesDropped - 1) / 2);
 	}
-	
+
+	public int getTotalDrops() {
+	    return piecesDropped;
+    }
+
 	public boolean isGameOver() {
 		return gameOver;
 	}

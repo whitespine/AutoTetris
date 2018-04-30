@@ -16,19 +16,21 @@ public class AIConfiguratorController {
 	public void fillConfigurator() {
 		//app.getAIConfigurator().getIterSpinner().setValue(model.getTrainingIterations());
         AIConfigurator config = app.getAIConfigurator();
-        config.getTotalHeight_wtfield().setText("" + app.getSolver().totalHeightWeight);
+        config.getTotalHeight_wtfield().setText("" + app.getSolver().squaredHeightWeight);
         config.getRows_wtfield().setText("" + app.getSolver().completeLinesWeight);
+		config.getMaxheight_wtfield().setText("" + app.getSolver().maxHeightWeight);
         config.getHoles_wtfield().setText("" + app.getSolver().holesWeight);
-        config.getHeightvar_wtfield().setText("" + app.getSolver().heightVarianceWeight);
+        config.getHeightDev_wtfield().setText("" + app.getSolver().heightStdevWeight);
 	}
 
-	public boolean writeConfiguration(Object iterations, String totalHeight_wts, String completeLines_wts, String holes_wts, String heightVariation_wts) {
-		double totalHeight_wt, completeLines_wt, holes_wt, heightVariation_wt;
+	public boolean writeConfiguration(Object iterations, String totalHeight_wts, String completeLines_wts, String holes_wts, String heightVariation_wts, String maxHeight_wts) {
+		double totalHeight_wt, completeLines_wt, holes_wt, heightVariation_wt, maxHeight_wt;
 		try {
 			totalHeight_wt = Double.parseDouble(totalHeight_wts);
 			completeLines_wt = Double.parseDouble(completeLines_wts);
 			holes_wt = Double.parseDouble(holes_wts);
 			heightVariation_wt = Double.parseDouble(heightVariation_wts);
+            maxHeight_wt = Double.parseDouble(maxHeight_wts);
 		} catch (NumberFormatException e) {
 			JOptionPane.showMessageDialog(app, "Provided weights need to be valid numbers.", "Error", JOptionPane.ERROR_MESSAGE);
 			return false;
@@ -38,9 +40,10 @@ public class AIConfiguratorController {
 
         TetrisSolver solver = app.getSolver();
         solver.completeLinesWeight = completeLines_wt;
-        solver.heightVarianceWeight = heightVariation_wt;
+        solver.heightStdevWeight = heightVariation_wt;
         solver.holesWeight = holes_wt;
-        solver.totalHeightWeight = totalHeight_wt;
+        solver.squaredHeightWeight = totalHeight_wt;
+        solver.maxHeightWeight = maxHeight_wt;
 		return true;
 	}
 }
