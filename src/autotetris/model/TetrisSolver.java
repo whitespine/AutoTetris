@@ -10,6 +10,7 @@ import java.util.stream.IntStream;
 public class TetrisSolver {
 	public double totalHeightWeight, completeLinesWeight, holesWeight, heightStdevWeight, squaredMaxHeightWeight;
 	public int actionDelay;
+	Actor a;
 
 	public TetrisSolver() {
 	    // Higher = better
@@ -64,9 +65,14 @@ public class TetrisSolver {
     }
 
 	public void execute(Application parent, Model target) {
-		Actor a = new Actor(parent, target, actionDelay);
+        a = new Actor(parent, target, actionDelay);
 		a.start();
 	}
+
+	public void stop() {
+        if (a != null)
+            a.halt();
+    }
 
 	// Executes the game on numTrials times, and returns an array of the scores
 	public int[] countDroppedMany(int numTrials) {
@@ -101,6 +107,10 @@ public class TetrisSolver {
             this.delay = delay;
 
             this.setDaemon(true);
+        }
+
+        public void halt() {
+            done = true;
         }
 
         @Override

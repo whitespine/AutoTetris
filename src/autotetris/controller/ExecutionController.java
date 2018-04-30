@@ -17,11 +17,14 @@ public class ExecutionController {
 	public void reset() {
 		if (ticker != null) {
 			ticker.kill();
-			try { ticker.join(); } catch (InterruptedException e) { }
-			model.setupGameState();
-			ticker = null;
-			app.repaint();
+			try {
+				ticker.join();
+			} catch (InterruptedException e) {
+			}
 		}
+		model.setupGameState();
+		ticker = null;
+		app.repaint();
 	}
 	
 	public void play() {
