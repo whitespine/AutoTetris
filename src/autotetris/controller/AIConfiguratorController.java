@@ -23,7 +23,7 @@ public class AIConfiguratorController {
         config.getHeightDev_wtfield().setText("" + app.getSolver().heightStdevWeight);
 	}
 
-	public boolean writeConfiguration(Object iterations, String totalHeight_wts, String completeLines_wts, String holes_wts, String heightVariation_wts, String maxHeight_wts) {
+	public boolean writeConfiguration(String totalHeight_wts, String completeLines_wts, String holes_wts, String heightVariation_wts, String maxHeight_wts) {
 		double totalHeight_wt, completeLines_wt, holes_wt, heightVariation_wt, maxHeight_wt;
 		try {
 			totalHeight_wt = Double.parseDouble(totalHeight_wts);
@@ -35,8 +35,6 @@ public class AIConfiguratorController {
 			JOptionPane.showMessageDialog(app, "Provided weights need to be valid numbers.", "Error", JOptionPane.ERROR_MESSAGE);
 			return false;
 		}
-		if ((iterations instanceof Integer) == false)
-			return false;
 
         TetrisSolver solver = app.getSolver();
         solver.completeLinesWeight = completeLines_wt;

@@ -19,7 +19,6 @@ public class AIConfigurator extends JFrame {
 
 	private static final long serialVersionUID = 5376626948600966282L;
 	private JPanel contentPane;
-	private JSpinner iterSpinner;
 	private JTextField totalHeight_wtfield;
 	private JTextField rows_wtfield;
 	private JTextField holes_wtfield;
@@ -40,39 +39,8 @@ public class AIConfigurator extends JFrame {
 		gbl_contentPane.rowHeights = new int[]{81, 81, 0, 0};
 		gbl_contentPane.columnWeights = new double[]{1.0, Double.MIN_VALUE};
 		gbl_contentPane.rowWeights = new double[]{1.0, 1.0, 0.0, Double.MIN_VALUE};
-		contentPane.setLayout(gbl_contentPane);
+		contentPane.setLayout(new GridLayout(0, 1));
 
-		
-		JPanel topPanel = new JPanel();
-		topPanel.setBorder(new TitledBorder(null, "Training Options", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		GridBagConstraints gbc_panel = new GridBagConstraints();
-		gbc_panel.fill = GridBagConstraints.BOTH;
-		gbc_panel.insets = new Insets(0, 0, 5, 0);
-		gbc_panel.gridx = 0;
-		gbc_panel.gridy = 0;
-		contentPane.add(topPanel, gbc_panel);
-		GridBagLayout gbl_panel = new GridBagLayout();
-		gbl_panel.columnWidths = new int[]{0, 0, 0};
-		gbl_panel.rowHeights = new int[]{0, 0};
-		gbl_panel.columnWeights = new double[]{0.0, 1.0, Double.MIN_VALUE};
-		gbl_panel.rowWeights = new double[]{0.0, Double.MIN_VALUE};
-		topPanel.setLayout(gbl_panel);
-		
-		JLabel lblIterations_Name = new JLabel("Iterations:");
-		GridBagConstraints gbc_lblIterations_Name = new GridBagConstraints();
-		gbc_lblIterations_Name.insets = new Insets(0, 0, 0, 5);
-		gbc_lblIterations_Name.gridx = 0;
-		gbc_lblIterations_Name.gridy = 0;
-		topPanel.add(lblIterations_Name, gbc_lblIterations_Name);
-		
-		iterSpinner = new JSpinner();
-		iterSpinner.setModel(new SpinnerNumberModel(0, 0, 1000, 10));
-		GridBagConstraints gbc_iterSpinner = new GridBagConstraints();
-		gbc_iterSpinner.fill = GridBagConstraints.HORIZONTAL;
-		gbc_iterSpinner.gridx = 1;
-		gbc_iterSpinner.gridy = 0;
-		topPanel.add(iterSpinner, gbc_iterSpinner);
-		
 		JPanel weightsPanel = new JPanel();
 		weightsPanel.setBorder(new TitledBorder(null, "Evaluation Weights", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		GridBagConstraints gbc_panel_1 = new GridBagConstraints();
@@ -136,7 +104,6 @@ public class AIConfigurator extends JFrame {
 		JButton btnOk = new JButton("OK");
 		btnOk.addActionListener(e -> {
             if (new AIConfiguratorController(parent).writeConfiguration(
-                    iterSpinner.getValue(),
                     totalHeight_wtfield.getText(),
                     rows_wtfield.getText(),
                     holes_wtfield.getText(),
@@ -153,7 +120,7 @@ public class AIConfigurator extends JFrame {
 		JButton btnApply = new JButton("Apply");
 		btnApply.addActionListener(e -> {
             AIConfiguratorController aicc = new AIConfiguratorController(parent);
-            aicc.writeConfiguration(iterSpinner.getValue(),
+            aicc.writeConfiguration(
                     totalHeight_wtfield.getText(),
                     rows_wtfield.getText(),
                     holes_wtfield.getText(),
@@ -162,10 +129,6 @@ public class AIConfigurator extends JFrame {
             aicc.fillConfigurator();
         });
 		buttonPanel.add(btnApply);
-	}
-
-	public JSpinner getIterSpinner() {
-		return iterSpinner;
 	}
 
 	public JTextField getTotalHeight_wtfield() {
