@@ -20,7 +20,7 @@ public class Application extends JFrame {
 	private JPanel contentPane;
 
 	// Sim state
-    private TetrisSolver solver;
+    TetrisSolver solver;
     public Model model;
 
 	// UI Garbage
@@ -32,7 +32,7 @@ public class Application extends JFrame {
 	private JMenuItem mntmPause;
 	private JMenuItem mntmReset;
 	private JMenu mnAiOptions;
-	private JMenuItem mntmTrain;
+	private JMenuItem mntmSetAIDelay;
 	private JMenuItem mntmAIPlay;
 	private JMenuItem mntmPreferences;
 	private AIConfigurator aic;
@@ -79,11 +79,17 @@ public class Application extends JFrame {
 		mnAiOptions = new JMenu("AI Options");
 		menuBar.add(mnAiOptions);
 		
-		mntmTrain = new JMenuItem("Train");
-		mntmTrain.addActionListener(e -> {
-            // TODO: Maybe actually do something here
+		mntmSetAIDelay = new JMenuItem("Set Speed");
+		mntmSetAIDelay.addActionListener(e -> {
+			String value = JOptionPane.showInputDialog(this, "How long should the AI wait between moves? (ms)", "Set Speed",
+					JOptionPane.QUESTION_MESSAGE);
+			try {
+				solver.actionDelay = Integer.parseInt(value);
+			} catch (NumberFormatException evt) {
+				JOptionPane.showMessageDialog(this, "Failed to set delay to non-numeric value");
+			}
         });
-		mnAiOptions.add(mntmTrain);
+		mnAiOptions.add(mntmSetAIDelay);
 
 		mnAiOptions.add(new JSeparator());
 
@@ -194,6 +200,7 @@ public class Application extends JFrame {
 		mntmPlay.addActionListener(e -> ec.play());
 		mntmPause.addActionListener(e -> ec.pause());
 		mntmReset.addActionListener(e -> ec.reset());
+		mntmReset.addActionListener(e -> solver.stop());
 	}
 
 	public AIConfigurator getAIConfigurator() {

@@ -105,12 +105,35 @@ public class TetrisSolver {
 
     private Actor a = null;
 	public void execute(Application parent, Model target) {
-	    if(a != null && a.isAlive())
-	        return;
-		a = new Actor(parent, target, true);
-		a.start();
+        if(a != null && a.isAlive())
+            return;
+        a = new Actor(parent, target, true);
+        a.start();
 	}
 
+	public void stop() {
+        if (a != null)
+            a.halt();
+    }
+
+	// Executes the game on numTrials times, and returns an array of the scores
+	public int[] countDroppedMany(int numTrials) {
+        return IntStream.range(0, numTrials)
+                .parallel()
+                .map(whocares -> {
+                    Model m = new Model();
+                    Actor a = new Actor(null, m, false);
+                    a.start();
+                    try {
+                        a.join();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    return a.targetModel.getTotalDrops();
+                })
+                .toArray();
+
+	}
     // Executes a game till completion
     // If targetApp is supplied, will repaint after each action on model
     // If delay > 0, will sleep for that long between actions
@@ -126,6 +149,10 @@ public class TetrisSolver {
             this.delay = delay;
 
             this.setDaemon(true);
+        }
+
+        public void halt() {
+            done = true;
         }
 
         @Override

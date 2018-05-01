@@ -1,5 +1,6 @@
 package autotetris.controller;
 
+import autotetris.model.Cell;
 import autotetris.model.Model;
 import autotetris.view.Application;
 
@@ -17,11 +18,17 @@ public class ExecutionController {
 	public void reset() {
 		if (ticker != null) {
 			ticker.kill();
-			try { ticker.join(); } catch (InterruptedException e) { }
-			model.setupGameState();
-			ticker = null;
-			app.repaint();
+			try {
+				ticker.join();
+			} catch (InterruptedException e) {
+			}
 		}
+		model.setupGameState();
+		ticker = null;
+		app.repaint();
+
+		Cell pos = model.getFallingPiece().getPosition();
+		model.getFallingPiece().move(new Cell(-pos.row, 0));
 	}
 	
 	public void play() {
