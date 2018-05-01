@@ -2,6 +2,9 @@ package autotetris.model;
 
 import autotetris.view.Application;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -251,6 +254,21 @@ public class TetrisSolver {
         ArrayList<Integer> drops = new ArrayList<>(_drops);
         ArrayList<Integer> scores = new ArrayList<>(_scores);
 
+        // Write to files
+
+        try {
+            PrintWriter fd = new PrintWriter("drops.dat");
+            PrintWriter fs = new PrintWriter("scores.dat");
+            for(int i=0; i<drops.size(); i++) {
+                fd.println(drops.get(i));
+                fs.println(scores.get(i));
+            }
+            fd.close();
+            fs.close();
+        } catch (IOException ie) {
+            ie.printStackTrace();
+        }
+
         // Do some calculations
         SolverScore s = new SolverScore();
         long sumDrops = 0;
@@ -281,5 +299,16 @@ public class TetrisSolver {
         public double meanScore; // Average score across trials
         public double devDrops; // Std deviation of # pieces dropped across trials
         public double devScore; // Std deviation of score dropped across trials
+
+        @Override
+        public String toString() {
+            return "SolverScore{" +
+                    "numTrials=" + numTrials +
+                    ", meanDrops=" + meanDrops +
+                    ", meanScore=" + meanScore +
+                    ", devDrops=" + devDrops +
+                    ", devScore=" + devScore +
+                    '}';
+        }
     }
 }

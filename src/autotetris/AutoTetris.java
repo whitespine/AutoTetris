@@ -33,12 +33,38 @@ public class AutoTetris {
 	}
 
 	public static void main(String[] args) {
-        if (args.length > 0 && args[0].equals("masstrain")) {
-            Trainer t = new Trainer(20, 0.4d, 50);
-            t.train(20);
+	    if (args.length > 5 && args[0].equals("masstrain")) {
+        	int P, M, T, I, G;
+        	try {
+				P = Integer.parseInt(args[1]);
+				G = Integer.parseInt(args[2]);
+				M = Integer.parseInt(args[3]);
+				T = Integer.parseInt(args[4]);
+				I = Integer.parseInt(args[5]);
+
+				Trainer t = new Trainer(P, G, M, I);
+				t.train(T);
+				return;
+			} catch (Exception e) {
+                System.out.println("One of parameters P M T I G  invalid");
+            }
+
         }
-	    else
+	    else if(args.length == 0) {
 	        runGUI();
+	        return;
+		}
+        else {
+			System.out.println("Invoke as either:");
+			System.out.println("./AutoTetris (or whatever you named the exe");
+			System.out.println("./AutoTetris masstrain <P> <G> <M> <T> <I>");
+			System.out.println("Where: ");
+			System.out.println("P = population size");
+			System.out.println("G = new offspring per round");
+			System.out.println("M = probability [0.0 - 1.0] that an offspring will have a randomly generated parent vector");
+			System.out.println("T = Number of rounds of offspring production to perform");
+			System.out.println("I = How many runs of the simulation to score each offspring with");
+		}
 	}
 
 }

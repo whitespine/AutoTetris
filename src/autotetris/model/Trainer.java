@@ -9,6 +9,7 @@ public class Trainer {
     private final int populationSize;
     private final double mutationChance;
     private final int testIntensity;
+    private final int spawnsPerRound;
     private final Random rng = new Random();
 
     private class Organism implements Comparable<Organism> {
@@ -32,8 +33,8 @@ public class Trainer {
      * @param mutationChance Probability to use a random vector instead of an existing tester as a parent
      * @param testIntensity How many runs of the solver to compute before returning score.
      */
-    public Trainer(int populationSize, double mutationChance, int testIntensity) {
-
+    public Trainer(int populationSize, double mutationChance, int testIntensity, int spawnsPerRound) {
+        this.spawnsPerRound = spawnsPerRound;
         this.populationSize = populationSize;
         this.mutationChance = mutationChance;
         this.testIntensity = testIntensity;
@@ -52,7 +53,7 @@ public class Trainer {
             System.out.println(String.format("Running trial #%d / %d", i+1, populationSize));
             // Generate new set of populae
             ArrayList<Organism> newMembers = new ArrayList<>();
-            for(int j=0; j<populationSize; j++) {
+            for(int j=0; j<spawnsPerRound; j++) {
                 newMembers.add(breedNewOrganism());
                 System.out.println(String.format("Bred organism #%d / %d", j+1, populationSize));
             }
@@ -62,7 +63,7 @@ public class Trainer {
             population.sort(Comparator.naturalOrder());
 
             // Truncate to best
-            for(int k=0; k<populationSize; k++)
+            while (population.size() > populationSize)
                 population.remove(0);
 
             // Print supremo
