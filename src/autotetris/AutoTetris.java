@@ -35,7 +35,7 @@ public class AutoTetris {
 	public static void main(String[] args) {
         if (args.length > 0 && args[0].equals("masstrain")) {
             Trainer t = new Trainer(20, 0.4d, 50);
-            t.train(100);
+            t.train(20);
         }
 	    else
 	        runGUI();

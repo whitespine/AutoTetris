@@ -207,7 +207,7 @@ public class Model {
         lastDown = System.currentTimeMillis();
 
         if(piecesDropped % 10000 == 0) {
-            System.out.print("_" + piecesDropped / 10000);
+            System.out.print(" " + piecesDropped / 10000);
         }
     }
 

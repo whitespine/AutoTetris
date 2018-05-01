@@ -6,6 +6,8 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 
 public class TetrisSolver {
@@ -14,12 +16,12 @@ public class TetrisSolver {
 
 	public TetrisSolver() {
 	    // Higher = better
-        // The below parameters had an average survival of ~50200 pieces
-		totalHeightWeight       = -0.0000601438;
-		completeLinesWeight     = +0.0002838841;
-		holesWeight             = -0.9994895805;
-		heightStdevWeight       = -0.0319446812;
-		squaredMaxHeightWeight  = -0.0001776817;
+        // The below parameters had an average survival of ~40000 pieces
+        totalHeightWeight       = -0.0940682412;
+        completeLinesWeight     = +0.0260657235;
+        holesWeight             = -0.9789442818;
+        heightStdevWeight       = -0.1792715434;
+        squaredMaxHeightWeight  = -0.0012453843;
         actionDelay = 1;
 	}
 
@@ -52,26 +54,29 @@ public class TetrisSolver {
         a.unitVectorize();
         b.unitVectorize();
 
+        // Create weights of each
+        double wta = ThreadLocalRandom.current().nextDouble();
+        double wtb = 1 - wta;
+
         // Create a combination of them
 	    TetrisSolver t = new TetrisSolver();
-        t.totalHeightWeight = a.totalHeightWeight + b.totalHeightWeight;
-        t.completeLinesWeight = a.completeLinesWeight + b.completeLinesWeight;
-        t.holesWeight = a.holesWeight + b.holesWeight;
-	    t.heightStdevWeight = a.heightStdevWeight + b.heightStdevWeight;
-        t.squaredMaxHeightWeight = a.squaredMaxHeightWeight + b.squaredMaxHeightWeight;
+        t.totalHeightWeight         = wta * a.totalHeightWeight       + wtb * b.totalHeightWeight;
+        t.completeLinesWeight       = wta * a.completeLinesWeight     + wtb * b.completeLinesWeight;
+        t.holesWeight               = wta * a.holesWeight             + wtb * b.holesWeight;
+	    t.heightStdevWeight         = wta * a.heightStdevWeight       + wtb * b.heightStdevWeight;
+        t.squaredMaxHeightWeight    = wta * a.squaredMaxHeightWeight  + wtb * b.squaredMaxHeightWeight;
 
         t.unitVectorize();
         return t;
     }
 
-    private static Random rng = new Random();
     private static double genRandomWeight(boolean expWeights) {
         double base = 2;
         double maxExponent = 20;
         if(expWeights)
-            return Math.pow(base, rng.nextDouble() * maxExponent);
+            return Math.pow(base, ThreadLocalRandom.current().nextDouble() * maxExponent);
         else
-            return rng.nextDouble();
+            return ThreadLocalRandom.current().nextDouble();
     }
 
 	private double score(Evaluation ev) {
@@ -90,6 +95,7 @@ public class TetrisSolver {
         s += heightStdevWeight * heightStdevWeight;
         s += squaredMaxHeightWeight * squaredMaxHeightWeight;
         s = Math.sqrt(s);
+        if(s == 0) s = 0.0001;
         totalHeightWeight /= s;
         completeLinesWeight /= s;
         holesWeight /= s;
@@ -195,8 +201,8 @@ public class TetrisSolver {
 
     public SolverScore scoreSelf(int numTrials) {
         // Run self numTrials times
-        ArrayList<Integer> drops = new ArrayList<>();
-        ArrayList<Integer> scores = new ArrayList<>();
+        ConcurrentLinkedQueue<Integer> _drops = new ConcurrentLinkedQueue<>();
+        ConcurrentLinkedQueue<Integer> _scores = new ConcurrentLinkedQueue<>();
         IntStream.range(0, numTrials)
         .parallel()
         .mapToObj(whocares -> {
@@ -210,9 +216,13 @@ public class TetrisSolver {
             }
             return m;
         }).forEach(m -> {
-            drops.add(m.getTotalDrops());
-            scores.add(m.getScore());
+            _drops.add(m.getTotalDrops());
+            _scores.add(m.getScore());
         });
+
+        // Bring to lists
+        ArrayList<Integer> drops = new ArrayList<>(_drops);
+        ArrayList<Integer> scores = new ArrayList<>(_scores);
 
         // Do some calculations
         SolverScore s = new SolverScore();

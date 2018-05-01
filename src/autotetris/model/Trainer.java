@@ -1,15 +1,29 @@
 package autotetris.model;
+import com.sun.org.apache.xpath.internal.operations.Or;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Random;
 
 public class Trainer {
     private final int populationSize;
     private final double mutationChance;
     private final int testIntensity;
+    private final Random rng = new Random();
 
-    private class Organism {
+    private class Organism implements Comparable<Organism> {
         TetrisSolver solver;
         TetrisSolver.SolverScore score;
+
+        public Organism(TetrisSolver solver) {
+            this.solver = solver;
+            this.score = solver.scoreSelf(testIntensity);
+        }
+
+        @Override
+        public int compareTo(Organism o) {
+            return Double.compare(score.meanDrops, o.score.meanDrops);
+        }
     }
     private ArrayList<Organism> population;
 
@@ -29,38 +43,60 @@ public class Trainer {
      * @param numTrials How many rounds of mutation/crossbreeding/etc to do
      */
     public void train(int numTrials) {
-        int trials = 16; // Number of runs to use on each solver
-        population = new ArrayList<>(populationSize);
+        System.out.println("Seeding populus");
+        if(population == null)
+            seedPopulus();
 
-        /*
-        //
-        double bestMeanDrops = -1;
-        for(int i=0; i<numSolvers; i++) {
-            TetrisSolver solver = TetrisSolver.genRandomSolver(true);
-            System.out.println("\n\n\nTesting solver #" + i + "\nWith config: " + solver);
-
-            TetrisSolver.SolverScore score = solver.scoreSelf(trials);
-            double meanDrops = score.meanDrops;
-
-            if(meanDrops > bestMeanDrops) {
-                bestMeanDrops = meanDrops;
-
-
-                System.out.println("^ New best solver with score " + bestMeanDrops);
+        // Do eet
+        for(int i=0; i<numTrials; i++) {
+            System.out.println(String.format("Running trial #%d / %d", i+1, populationSize));
+            // Generate new set of populae
+            ArrayList<Organism> newMembers = new ArrayList<>();
+            for(int j=0; j<populationSize; j++) {
+                newMembers.add(breedNewOrganism());
+                System.out.println(String.format("Bred organism #%d / %d", j+1, populationSize));
             }
-            else {
-                System.out.println("Got score: " + meanDrops);
-            }
+
+            // Add into existing list, and sort
+            population.addAll(newMembers);
+            population.sort(Comparator.naturalOrder());
+
+            // Truncate to best
+            for(int k=0; k<populationSize; k++)
+                population.remove(0);
+
+            // Print supremo
+            Organism currBest = population.get(population.size() - 1);
+            System.out.println("Best solver with score " + currBest.score.meanDrops);
+            System.out.println(currBest.solver);
         }
-
-        System.out.println("Best solver with score " + bestMeanDrops);
-        System.out.println(bestSolver);
-        */
     }
 
     private void seedPopulus() {
         population = new ArrayList<>(populationSize);
-        for(int i=0;;);
+        for(int i=0; i < populationSize; i++) {
+            TetrisSolver solver = TetrisSolver.genRandomSolver(true); // Initially want some extremes
+            Organism organism = new Organism(solver);
+            population.add(organism);
+            System.out.println(String.format("Bred organism #%d / %d", i+1, populationSize));
+        }
     }
 
+    private Organism breedNewOrganism() {
+        // Spawns and tests a single new member of the populus
+        TetrisSolver parent1, parent2;
+        if(rng.nextDouble() <= mutationChance) {
+            int i = rng.nextInt(population.size());
+            parent2 = population.get(i).solver;
+            parent1 = TetrisSolver.genRandomSolver(false);
+        } else {
+            int i = rng.nextInt(population.size());
+            int j =  rng.nextInt(population.size());
+            j = (i != j) ? j : ((j + 1) % population.size()); // Prevent them being the same member
+            parent1 = population.get(i).solver;
+            parent2 = population.get(j).solver;
+        }
+
+        return new Organism(TetrisSolver.crossBreed(parent1, parent2));
+    }
 }

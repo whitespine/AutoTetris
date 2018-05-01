@@ -2,17 +2,16 @@ package autotetris.model;
 
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class PieceGenerator {
     private final ArrayList<TetrominoPrototype> allPieces;
-    private final Random rng;
 
     private ArrayList<TetrominoPrototype> pieceQueue; // Current queue of pieces. "fair bag" approach
     private int next; // Next element to take from queue
 
     public PieceGenerator(ArrayList<TetrominoPrototype> allPieces) {
         this.allPieces = allPieces;
-        this.rng = new Random();
 
         // Prime stuff
         this.pieceQueue = genQueue();
@@ -43,14 +42,13 @@ public class PieceGenerator {
     }
 
     private int genNext() {
-        return rng.nextInt(pieceQueue.size());
+        return ThreadLocalRandom.current().nextInt(pieceQueue.size());
     }
 
     // Copy constructor. Gets new random (DIVERGENCE POSSIBLE IMMEDIATELY!)
     public PieceGenerator(PieceGenerator copy) {
         this.allPieces = copy.allPieces;
         this.pieceQueue = new ArrayList<>(copy.pieceQueue);
-        this.rng = new Random();
         genNext();
     }
 }
